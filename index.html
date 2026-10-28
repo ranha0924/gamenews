@@ -538,8 +538,9 @@ const household = {
         resultDesc: '연봉은 그대로였지만, 배우자가 아이를 돌봐 육아비는 연봉의 10%만 나갔습니다.' }
 };
 
-// 부업 (외벌이 전용, 1~3턴): 결과는 확률로 정해지고 금액 = 그 턴 연봉 × 가정 형태 적용 기간 × rate%
-// 기대값이 연봉의 약 20%라서 외벌이 + 부업 ≈ 맞벌이 (맞벌이는 안정적, 외벌이 + 부업은 위험이 큼)
+// 부업 (외벌이 전용, 1~3턴): 결과는 확률로 정해짐
+// 수익 = 그 턴 연봉 × 가정 형태 적용 기간 × rate% / 실패 시 손실은 lossMin~lossMax(만 원) 사이에서 무작위 (최대 1억)
+// 맞벌이는 안정적, 외벌이 + 부업은 위험이 큼
 const sideJob = {
     icon: '💻', title: '부업 (외벌이 전용)', hint: '남는 시간을 활용해 부업으로 부수입을 노립니다.',
     sideJob: true, requires: 'single',
@@ -551,7 +552,7 @@ const sideJob = {
     outcomes: [
         { prob: 25, desc: '부업이 대박 났습니다! 온라인 스토어가 입소문을 탔습니다.', rate: 45 },
         { prob: 50, desc: '꾸준히 해서 쏠쏠한 부수입을 올렸습니다.', rate: 20 },
-        { prob: 25, desc: '부업이 잘 안 풀려 장비·재료비만 날렸습니다.', rate: -5 }
+        { prob: 25, desc: '부업이 실패해 재고·장비·투자금을 날렸습니다.', lossMin: 1000, lossMax: 10000 }
     ]
 };
 
@@ -825,9 +826,12 @@ function resolveOutcome(choice, salary, turn) {
     if (choice.child) return childOutcome(choice.child, salary);
     const o = pickOutcome(choice.outcomes);
     if (!choice.sideJob) return o;
+    if (o.lossMax) {
+        const loss = o.lossMin + Math.round(Math.random() * (o.lossMax - o.lossMin) / 100) * 100;
+        return { desc: `${o.desc} (손실 ${fmt(loss)}만 원 / 최대 ${fmt(o.lossMax)}만 원)`, cash: -loss, salary: 0 };
+    }
     const years = HOUSEHOLD_YEARS[turn];
-    const basis = o.rate >= 0 ? `연봉의 ${o.rate}% × ${years}년` : `연봉의 ${-o.rate}% × ${years}년 손실`;
-    return { desc: `${o.desc} (${basis})`, cash: Math.round(salary * years * o.rate / 100), salary: 0 };
+    return { desc: `${o.desc} (연봉의 ${o.rate}% × ${years}년)`, cash: Math.round(salary * years * o.rate / 100), salary: 0 };
 }
 
 // 완료 버튼 처리: 선택 결과 공개 + 정산 후 상단 탭으로 다음 턴 이동 안내 (수정사항 다)
