@@ -523,12 +523,12 @@ const SEED_MONEY = 10000;        // 초기 자본 1억 (10,000만 원)
 const SALARY_APPLY_MONTHS = 60;  // 연봉 변화는 이번 턴 후반 5년간 적용 후, 다음 턴부터 기본 연봉에 반영
 
 // 가정 형태 (1턴에서 택1, 3턴까지 유지): 1턴은 30세 결혼 후 5년, 2·3턴은 10년간 적용하고 매 턴 종료 시 정산
-// 배우자 연봉 = 그 턴 나이대의 기본 연봉 / 육아비 = 맞벌이는 배우자 소득의 75%, 외벌이는 그 턴 본인 연봉의 10%
+// 배우자 연봉 = 그 턴 나이대의 기본 연봉 / 육아비 = 맞벌이는 배우자 소득의 90%, 외벌이는 그 턴 본인 연봉의 10%
 const HOUSEHOLD_YEARS = { 1: 5, 2: 10, 3: 10 };
 const household = {
-    dual: { icon: '👫', title: '맞벌이', dualIncome: true, childcareRate: 75, childcareBase: '배우자 소득의',
+    dual: { icon: '👫', title: '맞벌이', dualIncome: true, childcareRate: 90, childcareBase: '배우자 소득의',
         hint: '30세에 결혼해 부부가 함께 돈을 법니다. 아이는 어린이집·돌봄 서비스에 맡깁니다.',
-        resultDesc: '부부가 함께 벌어 가구 소득이 늘었습니다. 대신 배우자 소득의 75%가 육아비로 나갔습니다.' },
+        resultDesc: '부부가 함께 벌어 가구 소득이 늘었습니다. 대신 배우자 소득의 90%가 육아비로 나갔습니다.' },
     single: { icon: '🏡', title: '외벌이', dualIncome: false, childcareRate: 10, childcareBase: '연봉의',
         hint: '30세에 결혼해 한 사람만 돈을 벌고, 배우자가 집에서 아이를 돌봅니다.',
         resultDesc: '연봉은 그대로였지만, 배우자가 아이를 돌봐 육아비는 연봉의 10%만 나갔습니다.' }
