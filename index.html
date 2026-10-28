@@ -77,6 +77,8 @@
         .choice-card .c-title { font-weight: bold; margin-bottom: 4px; }
         .choice-card .c-hint { font-size: 0.88rem; color: #64748b; line-height: 1.45; }
         .choice-card .c-lock { margin-top: 8px; font-size: 0.8rem; color: #7c3aed; font-weight: bold; }
+        .household-note { background: #f5f3ff; border-left: 4px solid #7c3aed; padding: 10px 14px; margin: 10px 0; border-radius: 4px; font-size: 0.95rem; }
+        .household-note:empty { display: none; }
         .turn-page.done .choice-card { cursor: default; }
         .turn-page.done .choice-card:hover { border-color: var(--border); }
         .turn-page.done .choice-card.selected:hover { border-color: var(--primary); }
@@ -190,6 +192,10 @@
                 <input type="checkbox" checked disabled> <strong>[필수] 결혼 및 전세 보증금 (-8,000만 원)</strong>
             </div>
 
+            <h3>👨‍👩‍👧 가정 형태 선택 (필수 택1) <span class="badge badge-lock">🔒 결과는 턴 완료 후 공개</span></h3>
+            <p class="sub-note">30세에 결혼한다고 가정합니다. 고른 가정 형태는 3턴(54세)까지 유지되며, 매 턴 종료 시 정산됩니다.</p>
+            <div class="choice-list" id="t1_household"></div>
+
             <h3>🎲 선택 사항 <span class="badge badge-lock">🔒 결과는 턴 완료 후 공개</span></h3>
             <p class="sub-note">원하는 항목을 자유롭게 고르세요. 선택 사항의 비용·수익과 연봉 변화는 턴 완료 시 한꺼번에 정산됩니다.</p>
             <div class="choice-list" id="t1_choices"></div>
@@ -259,6 +265,7 @@
             <div class="checkbox-group">
                 <input type="checkbox" checked disabled> <strong>[필수] 출산 및 영유아/초등 양육비 (-6,000만 원)</strong>
             </div>
+            <div class="household-note" id="t2_household_note"></div>
 
             <h3>🎲 선택 사항 <span class="badge badge-lock">🔒 결과는 턴 완료 후 공개</span></h3>
             <p class="sub-note">원하는 항목을 자유롭게 고르세요. 선택 사항의 비용·수익과 연봉 변화는 턴 완료 시 한꺼번에 정산됩니다.</p>
@@ -329,6 +336,7 @@
             <div class="checkbox-group">
                 <input type="checkbox" checked disabled> <strong>[필수] 중·고등·대학 등록금/사교육 (-10,000만 원)</strong>
             </div>
+            <div class="household-note" id="t3_household_note"></div>
 
             <h3>🎲 선택 사항 <span class="badge badge-lock">🔒 결과는 턴 완료 후 공개</span></h3>
             <p class="sub-note">원하는 항목을 자유롭게 고르세요. 선택 사항의 비용·수익과 연봉 변화는 턴 완료 시 한꺼번에 정산됩니다.</p>
@@ -514,6 +522,18 @@ const config = {
 const SEED_MONEY = 10000;        // 초기 자본 1억 (10,000만 원)
 const SALARY_APPLY_MONTHS = 60;  // 연봉 변화는 이번 턴 후반 5년간 적용 후, 다음 턴부터 기본 연봉에 반영
 
+// 가정 형태 (1턴에서 택1, 3턴까지 유지): 1턴은 30세 결혼 후 5년, 2·3턴은 10년간 적용하고 매 턴 종료 시 정산
+// 배우자 연봉 = 그 턴 나이대의 기본 연봉 / 육아비 = 맞벌이는 배우자 소득의 75%, 외벌이는 그 턴 본인 연봉의 10%
+const HOUSEHOLD_YEARS = { 1: 5, 2: 10, 3: 10 };
+const household = {
+    dual: { icon: '👫', title: '맞벌이', dualIncome: true, childcareRate: 75, childcareBase: '배우자 소득의',
+        hint: '30세에 결혼해 부부가 함께 돈을 법니다. 아이는 어린이집·돌봄 서비스에 맡깁니다.',
+        resultDesc: '부부가 함께 벌어 가구 소득이 늘었습니다. 대신 배우자 소득의 75%가 육아비로 나갔습니다.' },
+    single: { icon: '🏡', title: '외벌이', dualIncome: false, childcareRate: 10, childcareBase: '연봉의',
+        hint: '30세에 결혼해 한 사람만 돈을 벌고, 배우자가 집에서 아이를 돌봅니다.',
+        resultDesc: '연봉은 그대로였지만, 배우자가 아이를 돌봐 육아비는 연봉의 10%만 나갔습니다.' }
+};
+
 // 턴별 선택 사항 (수정사항: 선택지 2~3개로 확장 & 결과 비공개)
 // 턴 완료 시 outcomes 중 하나가 확률(prob, %)에 따라 정해짐
 // cash: 턴 종료 시 정산되는 금액 (만 원) / salary: 연봉 변화율 (%)
@@ -556,7 +576,10 @@ const choices = {
             { prob: 25, desc: '약간의 수익을 내고 빠져나왔습니다.', cash: 1500, salary: 0 },
             { prob: 35, desc: '가격이 반토막 났습니다.', cash: -4000, salary: 0 },
             { prob: 25, desc: '알고 보니 투자 사기였습니다… 원금을 모두 잃었습니다.', cash: -8000, salary: 0 }
-          ] }
+          ] },
+        // 둘째 출산: 확률 없이 규칙대로 정산 (육아비 = 그 턴 연봉 × 10년 × 10%, 국가 지원금 = 육아비의 110%)
+        { icon: '👶', title: '둘째 출산 (한 명 더 낳기)', hint: '가족이 한 명 늘어납니다. 육아비와 함께 국가 지원금도 정산됩니다.',
+          child: { years: 10, costRate: 10, subsidyRate: 110 } }
     ],
     3: [
         { icon: '👵', title: '부모 부양 및 의료비 지원', hint: '연로하신 부모님의 생활비와 병원비를 지원합니다.',
@@ -624,6 +647,26 @@ function renderChoices(turn) {
     `).join('');
 }
 
+// 1턴 가정 형태 카드 렌더링 (택1, 금액은 표시하지 않음)
+function renderHousehold() {
+    document.getElementById('t1_household').innerHTML = Object.entries(household).map(([key, h]) => `
+        <label class="choice-card" for="t1_hh_${key}">
+            <input type="radio" name="t1_household" id="t1_hh_${key}" value="${key}" onchange="syncHousehold()">
+            <div>
+                <div class="c-title">${h.icon} [필수] ${h.title}</div>
+                <div class="c-hint">${h.hint}</div>
+                <div class="c-lock">🔒 금액 · 이익/손실 여부 비공개</div>
+            </div>
+        </label>
+    `).join('');
+}
+
+function syncHousehold() {
+    document.querySelectorAll('#t1_household .choice-card').forEach(card => {
+        card.classList.toggle('selected', card.querySelector('input').checked);
+    });
+}
+
 // 턴 시작 시점의 이월금과 연봉 배율 (이전 턴 정산 기록 기준)
 function turnStart(turn) {
     if (turn === 1) return { carry: SEED_MONEY, mult: 1 };
@@ -678,6 +721,12 @@ function calcTurn(turn) {
     setText(`t${turn}_surplus_txt`, signed(surplus));
     setText(`t${turn}_surplus_detail`, `(월 ${fmt(monthly)}만 - 월 ${fmt(cfg.expense)}만)`);
 
+    const hhNote = document.getElementById(`t${turn}_household_note`);
+    if (hhNote) {
+        const hh = records[1] && records[1].household;
+        hhNote.innerHTML = hh ? `${hh.icon} 가정 형태: <strong>${hh.title}</strong> 유지 중 (1턴에서 선택, 3턴까지) — 가정 형태에 따른 소득·육아비는 턴 종료 시 정산됩니다.` : '';
+    }
+
     const availEl = document.getElementById(`t${turn}_avail`);
     availEl.innerText = fmt(avail);
     availEl.style.color = avail < 0 ? 'var(--danger)' : '#2563eb';
@@ -714,6 +763,18 @@ function pickOutcome(outcomes) {
     return outcomes[outcomes.length - 1];
 }
 
+// 둘째 출산 정산: 육아비 = 그 턴 연봉 × 기간 × costRate%, 국가 지원금 = 육아비 × subsidyRate%
+function childOutcome(spec, salary) {
+    const cost = Math.round(salary * spec.years * spec.costRate / 100);
+    const subsidy = Math.round(cost * spec.subsidyRate / 100);
+    return {
+        desc: `둘째가 태어났습니다! 육아비(연봉의 ${spec.costRate}% × ${spec.years}년) ${signed(-cost)}만 원이 들었지만, 
+            국가 지원으로 육아비의 ${spec.subsidyRate}%인 ${signed(subsidy)}만 원을 받았습니다.`,
+        cash: subsidy - cost,
+        salary: 0
+    };
+}
+
 // 완료 버튼 처리: 선택 결과 공개 + 정산 후 상단 탭으로 다음 턴 이동 안내 (수정사항 다)
 function completeTurn(turn) {
     if (records[turn]) return;
@@ -723,12 +784,17 @@ function completeTurn(turn) {
         alert("자산 배분 비율은 0 이상이고, 합이 100%가 되어야 합니다!");
         return;
     }
+    const hhInput = document.querySelector(`input[name="t${turn}_household"]:checked`);
+    if (turn === 1 && !hhInput) {
+        alert("가정 형태(맞벌이/외벌이) 중 하나를 선택하세요!");
+        return;
+    }
 
     // 선택 사항 결과는 이 시점에 처음 정해지고 공개됨
     const picks = [];
     choices[turn].forEach((choice, i) => {
         if (document.getElementById(`t${turn}_c_${i}`).checked) {
-            picks.push({ choice, outcome: pickOutcome(choice.outcomes) });
+            picks.push({ choice, outcome: choice.child ? childOutcome(choice.child, calc.salary) : pickOutcome(choice.outcomes) });
         }
     });
 
@@ -738,9 +804,22 @@ function completeTurn(turn) {
     const monthlyAfter = cfg.income * multAfter;
     const salaryAfter = Math.round(monthlyAfter * 12);
     const salaryIncomeDelta = Math.round((monthlyAfter - calc.monthly) * SALARY_APPLY_MONTHS);
-    const final = calc.investFinal + choiceCash + salaryIncomeDelta;
 
-    records[turn] = { ...calc, picks, choiceCash, multAfter, salaryAfter, salaryIncomeDelta, final };
+    // 가정 형태 정산 (1턴에서 선택, 3턴까지 유지): 맞벌이는 배우자 소득 추가, 육아비는 기준 금액의 일정 비율
+    const hhKey = turn === 1 ? hhInput.value : records[1].household.key;
+    const hhYears = HOUSEHOLD_YEARS[turn];
+    let hh = null;
+    if (hhYears) {
+        const def = household[hhKey];
+        const spouseSalary = def.dualIncome ? cfg.income * 12 : 0;
+        const spouseIncome = Math.round(spouseSalary * hhYears);
+        const childcare = Math.round((def.dualIncome ? spouseIncome : calc.salary * hhYears) * def.childcareRate / 100);
+        hh = { ...def, key: hhKey, years: hhYears, spouseSalary, spouseIncome, childcare, net: spouseIncome - childcare };
+    }
+    const householdNet = hh ? hh.net : 0;
+    const final = calc.investFinal + choiceCash + salaryIncomeDelta + householdNet;
+
+    records[turn] = { ...calc, picks, choiceCash, multAfter, salaryAfter, salaryIncomeDelta, household: hh, householdNet, final };
 
     lockTurn(turn);
     renderResult(turn);
@@ -801,6 +880,24 @@ function renderResult(turn) {
         </div>`;
     }).join('') : '<p class="muted">이번 턴에는 선택한 항목이 없습니다.</p>';
 
+    const hh = rec.household;
+    const hhVerdict = hh ? verdict({ cash: hh.net, salary: 0 }) : null;
+    const householdCard = hh ? `
+        <h5>👨‍👩‍👧 ${turn === 1 ? '가정 형태 결과 공개' : `가정 형태 정산 (${hh.title} 유지 중)`}</h5>
+        <div class="outcome-card ${hhVerdict.cls}">
+            <div class="outcome-head"><span>${hh.icon} ${hh.title}</span><span class="verdict ${hhVerdict.cls}">${hhVerdict.text}</span></div>
+            <div class="outcome-desc">${hh.resultDesc}</div>
+            <div class="outcome-nums">
+                <span>💼 배우자 소득 (${hh.years}년): <strong class="${toneClass(hh.spouseIncome)}">${hh.spouseIncome ? signed(hh.spouseIncome) + '만 원' : '없음'}</strong></span>
+                <span>🍼 육아비 (${hh.childcareBase} ${hh.childcareRate}%${hh.dualIncome ? '' : ` × ${hh.years}년`}): <strong class="down">${signed(-hh.childcare)}만 원</strong></span>
+                <span>💰 순효과: <strong class="${toneClass(hh.net)}">${signed(hh.net)}만 원</strong></span>
+            </div>
+        </div>` : '';
+    const hhUntil = turn === 3 ? '가정 형태 효과는 이번 턴까지' : '3턴까지 유지';
+    const householdLine = !hh ? '' : hh.dualIncome
+        ? `<li>${hh.icon} ${hh.title}: ${hh.years}년간 가구 연봉 <strong class="up">${fmt(rec.salary + hh.spouseSalary)}만 원</strong> (본인 ${fmt(rec.salary)} + 배우자 ${fmt(hh.spouseSalary)}) — ${hhUntil}</li>`
+        : `<li>${hh.icon} ${hh.title}: 가구 연봉은 본인 연봉 <strong>${fmt(rec.salary)}만 원</strong> 그대로입니다. (${hhUntil})</li>`;
+
     const salaryPct = (rec.multAfter / rec.mult - 1) * 100;
     const salaryChanged = Math.abs(salaryPct) >= 0.05;
     let nextLine;
@@ -820,6 +917,7 @@ function renderResult(turn) {
             <span class="${toneClass(salaryPct)}" style="font-size:0.85em;">(${pctText(salaryPct)})</span>
         </div>
         <ul>
+            ${householdLine}
             <li>${salaryChanged ? '선택 결과로 연봉이 바뀌었습니다.' : '선택에 따른 연봉 변화가 없습니다.'}</li>
             <li>연봉 변화에 따른 이번 턴 소득 증감 (후반 5년): <strong class="${toneClass(rec.salaryIncomeDelta)}">${signed(rec.salaryIncomeDelta)}만 원</strong></li>
             <li>${nextLine}</li>
@@ -844,6 +942,7 @@ function renderResult(turn) {
                     <tbody>${investRows}</tbody>
                 </table>
             </div>
+            ${householdCard}
             <h5>🎲 선택 사항 결과 공개</h5>
             ${pickCards}
         </div>
@@ -856,7 +955,7 @@ function renderResult(turn) {
             <div class="total-value">${fmt(rec.final)} 만 원</div>
             <div class="total-diff">${prevLabel} ${fmt(rec.carry)}만 원 대비 <span class="${toneClass(growth)}">${signed(growth)}만 원</span></div>
             <div class="total-breakdown">
-                투자 정산 ${fmt(rec.investFinal)}만 + 선택 손익 ${signed(rec.choiceCash)}만 + 연봉 변화 소득 ${signed(rec.salaryIncomeDelta)}만 = <strong>${fmt(rec.final)}만 원</strong>
+                투자 정산 ${fmt(rec.investFinal)}만 + 선택 손익 ${signed(rec.choiceCash)}만 + 연봉 변화 소득 ${signed(rec.salaryIncomeDelta)}만${hh ? ` + ${hh.title} 순효과 ${signed(hh.net)}만` : ''} = <strong>${fmt(rec.final)}만 원</strong>
             </div>
         </div>
         <div class="next-hint reveal" style="animation-delay:1.8s;">${nextHint}</div>
@@ -873,13 +972,19 @@ function renderSummary() {
     for (let t = 1; t <= 4; t++) {
         const rec = records[t];
         const assetCell = k => `${rec.p[k]}% / ${rec.r[k] > 0 ? '+' : ''}${rec.r[k]}%<br><strong>${fmt(rec.res[k])}만 원</strong>`;
-        const picks = rec.picks.length ? rec.picks.map(({ choice, outcome }) => {
-            const v = verdict(outcome);
+        const pickLine = (icon, v, detail) =>
+            `<div class="pick-line">${icon} <span class="${v.cls === 'gain' ? 'up' : (v.cls === 'loss' ? 'down' : '')}">${v.text}</span> (${detail})</div>`;
+        const lines = rec.picks.map(({ choice, outcome }) => {
             const parts = [];
             if (outcome.cash) parts.push(`${signed(outcome.cash)}만`);
             if (outcome.salary) parts.push(`연봉 ${outcome.salary > 0 ? '+' : ''}${outcome.salary}%`);
-            return `<div class="pick-line">${choice.icon} <span class="${v.cls === 'gain' ? 'up' : (v.cls === 'loss' ? 'down' : '')}">${v.text}</span> (${parts.join(' / ') || '변화 없음'})</div>`;
-        }).join('') : '<span style="color:#94a3b8;">선택 없음</span>';
+            return pickLine(choice.icon, verdict(outcome), parts.join(' / ') || '변화 없음');
+        });
+        if (rec.household) {
+            const hh = rec.household;
+            lines.unshift(pickLine(`${hh.icon} ${hh.title}`, verdict({ cash: hh.net, salary: 0 }), `${signed(hh.net)}만`));
+        }
+        const picks = lines.join('') || '<span style="color:#94a3b8;">선택 없음</span>';
         const salaryPct = (rec.multAfter / rec.mult - 1) * 100;
 
         const tr = document.createElement('tr');
@@ -910,6 +1015,7 @@ function initGame() {
         page.querySelectorAll('input[type="number"]').forEach(el => { el.value = el.defaultValue; el.disabled = false; });
         page.querySelectorAll('select').forEach(el => { el.selectedIndex = 0; el.disabled = false; });
         renderChoices(t);
+        if (t === 1) renderHousehold();
 
         const btn = document.getElementById(`t${t}_btn`);
         btn.disabled = false;
