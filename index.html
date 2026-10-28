@@ -517,10 +517,10 @@ const presets = {
 
 // 턴별 기본 설정 (금액 단위: 만 원 / income·expense는 월 기준, 10년 잉여 자금 = (월 소득 - 월 생활비) × 120개월)
 const config = {
-    1: { name: "1턴 (25~34세)", income: 350, expense: 200, req: 8000 },   // 기본 잉여 18,000
-    2: { name: "2턴 (35~44세)", income: 500, expense: 250, req: 6000 },   // 기본 잉여 30,000
-    3: { name: "3턴 (45~54세)", income: 650, expense: 350, req: 10000 },  // 기본 잉여 36,000
-    4: { name: "4턴 (55~64세)", income: 450, expense: 350, req: 6000 }    // 기본 잉여 12,000
+    1: { name: "1턴 (25~34세)", startAge: 25, income: 350, expense: 200, req: 8000 },   // 기본 잉여 18,000
+    2: { name: "2턴 (35~44세)", startAge: 35, income: 500, expense: 250, req: 6000 },   // 기본 잉여 30,000
+    3: { name: "3턴 (45~54세)", startAge: 45, income: 650, expense: 350, req: 10000 },  // 기본 잉여 36,000
+    4: { name: "4턴 (55~64세)", startAge: 55, income: 450, expense: 350, req: 6000 }    // 기본 잉여 12,000
 };
 
 const SEED_MONEY = 10000;        // 초기 자본 1억 (10,000만 원)
@@ -618,32 +618,31 @@ const choices = {
             { prob: 35, desc: '근근이 운영했지만 투자금 일부만 회수했습니다.', cash: -1500, salary: 0 },
             { prob: 40, desc: '경기 침체로 폐업… 권리금과 인테리어 비용을 날렸습니다.', cash: -7000, salary: 0 }
           ] },
-        { icon: '🎯', title: '임원 승진 도전 (성과 연봉제 계약)', hint: '성과에 따라 연봉이 정해지는 계약입니다. 기회와 위험이 공존합니다.',
+        // 임원 승진: 운(50:50). 성공하면 연봉 +50%지만 임기가 끝나는 52세에 퇴직, 실패하면 50세에 퇴직
+        // 퇴직 후 남은 3턴 기간은 연봉 없음 (4턴은 재취업해 기본 연봉으로 시작)
+        { icon: '🎯', title: '임원 승진 도전', hint: '임원 자리를 놓고 승부합니다. 결과는 운에 달려 있고, 임원은 임기가 짧다는데…',
+          exec: true,
           outcomes: [
-            { prob: 30, desc: '임원 승진! 연봉이 크게 뛰었습니다.', cash: 1000, salary: 25 },
-            { prob: 40, desc: '목표를 달성해 연봉이 소폭 올랐습니다.', cash: 0, salary: 8 },
-            { prob: 30, desc: '목표 미달로 구조조정 대상이 되어 연봉이 깎였습니다. (위로금 지급)', cash: 2000, salary: -15 }
+            { prob: 50, desc: '임원 승진 성공! 연봉이 50% 올랐지만, 임기가 끝나 52세에 퇴직했습니다.', raise: 50, retireAge: 52 },
+            { prob: 50, desc: '임원 승진 실패… 50세에 회사를 떠났습니다.', raise: 0, retireAge: 50 }
           ] },
         sideJob
     ],
     4: [
-        { icon: '💍', title: '자녀 독립 및 결혼 지원', hint: '자녀의 결혼과 신혼집 마련을 도와줍니다.',
+        // 자녀 지원: 결혼 지원금 5,000만 원 + 매달 100만 원 × 120개월(12,000만 원)
+        { icon: '💍', title: '자녀 독립 및 결혼 지원', hint: '자녀의 결혼을 돕고, 독립한 자녀의 생활비도 보태 줍니다.',
           outcomes: [
-            { prob: 40, desc: '자녀가 소박한 결혼식을 원해 지원금이 적게 들었습니다.', cash: -2500, salary: 0 },
-            { prob: 45, desc: '신혼집 전세자금까지 지원했습니다.', cash: -6000, salary: 0 },
-            { prob: 15, desc: '지원은 했지만 들어온 축의금이 더 많았습니다!', cash: 1000, salary: 0 }
+            { prob: 100, desc: '결혼 지원금 5,000만 원을 주고, 독립한 자녀에게 매달 100만 원씩(10년간 12,000만 원) 생활비를 보태 주었습니다.', cash: -17000, salary: 0 }
           ] },
         { icon: '🔧', title: '정년 연장·재취업 준비 (기술 자격증)', hint: '은퇴 후에도 일할 수 있도록 새로운 기술을 배웁니다.',
           outcomes: [
-            { prob: 45, desc: '기술을 인정받아 정년이 연장되고 연봉도 올랐습니다.', cash: -500, salary: 15 },
-            { prob: 35, desc: '재취업에는 성공했지만 연봉은 다소 줄었습니다.', cash: -500, salary: -5 },
-            { prob: 20, desc: '나이 때문에 재취업에 실패했습니다. 교육비만 들었습니다.', cash: -1000, salary: 0 }
+            { prob: 100, desc: '교육비 5,000만 원을 들여 기술을 익혔고, 정년이 연장되며 연봉이 10% 올랐습니다.', cash: -5000, salary: 10 }
           ] },
-        { icon: '🏢', title: '노후 대비 상가(수익형 부동산) 투자', hint: '월세를 받는 상가에 투자합니다. 좋은 임차인을 구해야 합니다.',
+        // 상가 투자: 운(50:50)
+        { icon: '🏢', title: '노후 대비 상가(수익형 부동산) 투자', hint: '월세를 받는 상가에 투자합니다. 결과는 운에 달려 있습니다.',
           outcomes: [
-            { prob: 40, desc: '우량 임차인 입주! 안정적인 월세 수입이 들어왔습니다.', cash: 7000, salary: 0 },
-            { prob: 35, desc: '공실이 길어져 관리비만 나갔습니다.', cash: -2500, salary: 0 },
-            { prob: 25, desc: '상권 침체로 상가 가격이 떨어졌습니다.', cash: -6000, salary: 0 }
+            { prob: 50, desc: '우량 임차인 입주! 월세 수입과 시세 차익을 얻었습니다.', cash: 6000, salary: 0 },
+            { prob: 50, desc: '공실과 상권 침체로 상가 가격이 떨어졌습니다.', cash: -6000, salary: 0 }
           ] }
     ]
 };
@@ -821,10 +820,34 @@ function childOutcome(spec, salary) {
     };
 }
 
-// 선택 사항 결과 결정: 둘째 출산은 규칙 계산, 부업은 확률 추첨 후 연봉 비례 금액, 나머지는 확률 추첨
+// 임원 승진 정산: 퇴직 전까지 연봉 인상분을 받고, 퇴직 후 남은 턴 기간의 연봉은 받지 못함
+// (퇴직으로 끝나므로 다음 턴 연봉 배율에는 반영하지 않음)
+function execOutcome(o, salary, turn) {
+    const workYears = o.retireAge - config[turn].startAge;
+    const lostYears = 10 - workYears;
+    const raisedSalary = Math.round(salary * (1 + o.raise / 100));
+    const raiseIncome = Math.round(salary * o.raise / 100 * workYears);
+    const lostIncome = Math.round(salary * lostYears);
+    return {
+        desc: `${o.desc} (${o.raise ? `${o.retireAge}세까지 ${workYears}년 연봉 인상분 ${signed(raiseIncome)}만 원 / ` : ''}퇴직 후 ${lostYears}년 연봉 없음 ${signed(-lostIncome)}만 원)`,
+        cash: raiseIncome - lostIncome,
+        salary: 0,
+        salaryText: (o.raise ? `+${o.raise}%, ` : '') + `${o.retireAge}세 퇴직`,
+        salaryTone: o.raise ? 1 : -1,
+        salaryLine: o.raise
+            ? `🎯 임원 승진: ${o.retireAge}세 퇴직까지 ${workYears}년간 연봉 <strong class="up">${fmt(raisedSalary)}만 원</strong> (+${o.raise}%), 퇴직 후 ${lostYears}년은 연봉 없음`
+            : `🎯 임원 승진 실패: ${o.retireAge}세에 퇴직해 남은 ${lostYears}년은 연봉 없음 <strong class="down">${signed(-lostIncome)}만 원</strong>`,
+        retireAge: o.retireAge,
+        raise: o.raise,
+        raisedSalary
+    };
+}
+
+// 선택 사항 결과 결정: 둘째 출산은 규칙 계산, 임원 승진·부업은 확률 추첨 후 연봉 비례 금액, 나머지는 확률 추첨
 function resolveOutcome(choice, salary, turn) {
     if (choice.child) return childOutcome(choice.child, salary);
     const o = pickOutcome(choice.outcomes);
+    if (choice.exec) return execOutcome(o, salary, turn);
     if (!choice.sideJob) return o;
     if (o.lossMax) {
         const loss = o.lossMin + Math.round(Math.random() * (o.lossMax - o.lossMin) / 100) * 100;
@@ -937,7 +960,7 @@ function renderResult(turn) {
             <div class="outcome-desc">${outcome.desc}</div>
             <div class="outcome-nums">
                 <span>💰 금전: <strong class="${toneClass(outcome.cash)}">${outcome.cash ? signed(outcome.cash) + '만 원' : '변화 없음'}</strong></span>
-                <span>💼 연봉: <strong class="${toneClass(outcome.salary)}">${outcome.salary ? (outcome.salary > 0 ? '+' : '') + outcome.salary + '%' : '변화 없음'}</strong></span>
+                <span>💼 연봉: <strong class="${toneClass(outcome.salaryText ? outcome.salaryTone : outcome.salary)}">${outcome.salaryText || (outcome.salary ? (outcome.salary > 0 ? '+' : '') + outcome.salary + '%' : '변화 없음')}</strong></span>
             </div>
         </div>`;
     }).join('') : '<p class="muted">이번 턴에는 선택한 항목이 없습니다.</p>';
@@ -973,14 +996,23 @@ function renderResult(turn) {
     } else {
         nextLine = '은퇴 전 마지막 턴이므로 다음 턴 반영은 없습니다.';
     }
+    // 임원 승진으로 퇴직한 경우: 퇴직까지의 연봉 흐름을 보여 주고, 4턴은 재취업 기본 연봉으로 시작
+    const retire = rec.picks.map(pk => pk.outcome).find(o => o.retireAge);
+    const flowHtml = retire
+        ? `${fmt(rec.salary)}만 원 ➔ ${retire.raise ? `<span class="up">${fmt(retire.raisedSalary)}만 원</span>
+            <span class="up" style="font-size:0.85em;">(+${retire.raise}%)</span> ➔ ` : ''}<span class="down">${retire.retireAge}세 퇴직</span>`
+        : `${fmt(rec.salary)}만 원 ➔ <span class="${toneClass(salaryPct)}">${fmt(rec.salaryAfter)}만 원</span>
+            <span class="${toneClass(salaryPct)}" style="font-size:0.85em;">(${pctText(salaryPct)})</span>`;
+    const pickSalaryLines = rec.picks.filter(pk => pk.outcome.salaryLine).map(pk => `<li>${pk.outcome.salaryLine}</li>`).join('');
+    const salaryStatus = retire
+        ? '4턴(55세~)은 재취업해 다시 기본 연봉을 받는 것으로 봅니다.'
+        : (salaryChanged ? '선택 결과로 연봉이 바뀌었습니다.' : '선택에 따른 연봉 변화가 없습니다.');
     const salaryBody = `
-        <div class="salary-flow">
-            ${fmt(rec.salary)}만 원 ➔ <span class="${toneClass(salaryPct)}">${fmt(rec.salaryAfter)}만 원</span>
-            <span class="${toneClass(salaryPct)}" style="font-size:0.85em;">(${pctText(salaryPct)})</span>
-        </div>
+        <div class="salary-flow">${flowHtml}</div>
         <ul>
             ${householdLine}
-            <li>${salaryChanged ? '선택 결과로 연봉이 바뀌었습니다.' : '선택에 따른 연봉 변화가 없습니다.'}</li>
+            ${pickSalaryLines}
+            <li>${salaryStatus}</li>
             <li>연봉 변화에 따른 이번 턴 소득 증감 (후반 5년): <strong class="${toneClass(rec.salaryIncomeDelta)}">${signed(rec.salaryIncomeDelta)}만 원</strong></li>
             <li>${nextLine}</li>
         </ul>`;
@@ -1039,7 +1071,8 @@ function renderSummary() {
         const lines = rec.picks.map(({ choice, outcome }) => {
             const parts = [];
             if (outcome.cash) parts.push(`${signed(outcome.cash)}만`);
-            if (outcome.salary) parts.push(`연봉 ${outcome.salary > 0 ? '+' : ''}${outcome.salary}%`);
+            if (outcome.salaryText) parts.push(outcome.raise ? `연봉 ${outcome.salaryText}` : outcome.salaryText);
+            else if (outcome.salary) parts.push(`연봉 ${outcome.salary > 0 ? '+' : ''}${outcome.salary}%`);
             return pickLine(choice.icon, verdict(outcome), parts.join(' / ') || '변화 없음');
         });
         if (rec.household) {
