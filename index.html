@@ -110,6 +110,22 @@
         .alloc-preview { margin: 8px 0 0; font-weight: bold; color: var(--primary); }
         .scenario-card { margin-top: 12px; padding: 12px 14px; border: 2px solid var(--accent); border-radius: 10px; background: #fffbeb; font-weight: bold; font-size: 1.05rem; }
         .scenario-rates { margin-top: 4px; font-size: 0.92rem; color: #92400e; }
+        .why-meta { font-size: 0.95rem; line-height: 1.7; }
+        .why-link { display: inline-block; margin: 0 4px; padding: 3px 10px; border-radius: 999px; background: var(--primary); color: #fff; font-size: 0.82rem; font-weight: bold; text-decoration: none; }
+        .why-link:hover { background: var(--primary-hover); }
+        .why-summary { margin: 10px 0; padding: 10px 12px; background: #eff6ff; border-radius: 8px; line-height: 1.6; }
+        .why-news { list-style: none; margin: 6px 0 4px; padding: 0; }
+        .why-news li { margin-bottom: 6px; padding: 7px 10px; border-left: 3px solid #94a3b8; background: #f8fafc; border-radius: 0 6px 6px 0; font-size: 0.92rem; }
+        .why-news li strong { margin-right: 6px; color: #475569; }
+        .why-chain { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0 4px; }
+        .why-chain span { padding: 4px 10px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 0.85rem; font-weight: bold; }
+        .why-chain span.arrow { padding: 0; background: none; color: #94a3b8; }
+        .why-asset { margin-bottom: 8px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .why-asset-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-weight: bold; }
+        .why-mine { font-size: 0.88rem; color: #475569; }
+        .why-asset p { margin: 6px 0 4px; font-size: 0.92rem; line-height: 1.6; }
+        .why-evidence { font-size: 0.8rem; color: #64748b; }
+        .why-note { margin-top: 10px; padding: 10px 12px; border-left: 4px solid var(--accent); background: #fffbeb; border-radius: 4px; font-size: 0.92rem; }
         .money-flow { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
         .money-flow td { padding: 7px 8px; border-bottom: 1px dashed #e2e8f0; }
         .money-flow td:last-child { text-align: right; white-space: nowrap; font-weight: bold; }
@@ -621,6 +637,105 @@ const scenarios = {
     4: { name: '🟣 금융 위기',     dep: 2, stk: -40, bnd: 5 },
     5: { name: '🟢 골디락스',      dep: 3, stk: 15,  bnd: 5 }
 };
+// 흥덕 뉴스(같은 번호의 시나리오) 기사와 해설: 최종 완료 후 '왜 이렇게 나왔을까?'에 표시
+const NEWS_URL = 'https://newsgame-eight.vercel.app/';
+const scenarioNews = {
+    1: {
+        issue: "제1호 · 202X년 4월",
+        title: "🔴 기준금리 인상 (인플레이션 시나리오)",
+        rates: "+5% / -20% / -10%",
+        summary: "물가가 크게 오르자 중앙은행이 금리를 올렸어요. 금리가 오르면 돈을 맡긴 예금은 이자가 늘고, 이자 부담이 커진 기업과 이미 발행된 채권은 불리해져요.",
+        headlines: [
+            "장바구니 물가 6%대 상승… 외식비·전기요금 줄줄이 올라",
+            "중앙은행, 기준금리 0.5%p 인상… 연 4.75%",
+            "주택담보대출 금리 7% 육박… \"한 달 상환액 40만 원 늘었다\"",
+            "\"번 돈으로 이자 내기도 빠듯\"… 기업들 투자 미루고 실적 전망도 낮춰"
+        ],
+        chain: ["물가 6.2% 상승", "기준금리 연 4.75%", "은행 금리 상승", "기업 이자 부담↑ · 소비↓", "기업 이익 전망 -20%"],
+        why: {
+            dep: { text: "기사 2에서 기준금리가 연 4.75%까지 올랐어요. 기사 3의 대출금리 7% 육박도 은행 금리가 전반적으로 올랐다는 증거예요. 그래서 예금 이자는 약 5%예요.", evidence: [2, 3] },
+            stk: { text: "기사 4에서 상장사 이익 전망이 연초보다 20% 줄었어요. 물가 상승(기사 1)과 이자 부담(기사 3)으로 소비와 투자가 위축된 결과예요.", evidence: [1, 3, 4] },
+            bnd: { text: "기사 2에서 금리가 올해 1%p 올랐고 추가 인상도 예고됐어요. 기존 채권 가격이 떨어져, 이자를 받고도 전체로는 손실이에요.", evidence: [2] }
+        },
+        note: "세 자산 중 유일하게 플러스인 예금이 이 시기의 승자예요."
+    },
+    2: {
+        issue: "제2호 · 202X년 8월",
+        title: "🔵 기준금리 인하 (경기 침체 시나리오)",
+        rates: "+1% / -10% / +15%",
+        summary: "일자리와 소비가 줄며 경기가 나빠지자 중앙은행이 금리를 내렸어요. 금리가 내려가면 예금 이자는 줄지만, 이미 발행된 채권의 가치는 올라가요.",
+        headlines: [
+            "청년 실업률 3년 만에 최고… 기업들 하반기 채용 '최소화'",
+            "지갑 닫은 소비자들… 소매판매 4개 분기 연속 감소",
+            "중앙은행, 기준금리 0.5%p 인하… 연 1.00%",
+            "상장사 하반기 실적 전망 10% 하향… 수출 주문도 감소"
+        ],
+        chain: ["고용·소비 위축", "기업 이익 전망 -10%", "기준금리 연 1.00%", "추가 인하 전망", "기존 채권 가치 상승"],
+        why: {
+            dep: { text: "기사 3에서 기준금리가 연 1.00%로 내려가 예금 이자도 약 1%로 줄었어요.", evidence: [3] },
+            stk: { text: "기사 4에서 하반기 이익 전망이 석 달 새 10% 낮아졌어요. 실업률 상승(기사 1)과 소비 감소(기사 2)가 원인이에요.", evidence: [1, 2, 4] },
+            bnd: { text: "기사 3에서 금리가 1%p 내렸고, 총재 발언으로 추가 인하 전망까지 나왔어요. 금리가 계속 내려갈 것으로 보이면 기존 채권 가격이 크게 올라요.", evidence: [3] }
+        },
+        note: "금리가 계속 내려가는 시기에는 채권이 세 자산 중 가장 높은 수익을 내요."
+    },
+    3: {
+        issue: "제3호 · 202X년 11월",
+        title: "🟡 기술 혁신 & 증시 호황 (하이리스크 대호황)",
+        rates: "+2% / +40% / -5%",
+        summary: "새 기술 덕분에 기업 이익이 크게 늘었어요. 기업이 앞으로 돈을 더 잘 벌 것으로 예상되면 주가가 올라요. 반면 경기가 달아오르면 금리가 오를 수 있어 채권에는 불리해요.",
+        headlines: [
+            "차세대 AI 반도체 양산 성공… 해외 주문 몰려",
+            "IT 기업 3분기 영업이익 2.5배로… 상장사 이익 전망도 40% 높아져",
+            "AI 개발자 모시기 경쟁… 채용 공고 역대 최다, 초봉도 껑충",
+            "데이터센터·공장 투자 28% 늘어… 내년 성장률 전망 상향"
+        ],
+        chain: ["기술 혁신", "기업 이익 급증", "상장사 이익 전망 +40%", "투자·고용 확대", "시장 금리 상승 가능성"],
+        why: {
+            dep: { text: "기사 4에서 기준금리가 연 1.75%로 그대로라 평범한 이자(약 2%)를 받아요.", evidence: [4] },
+            stk: { text: "기사 2에서 상장사 전체 이익 전망이 40% 올랐어요. 기사 1(반도체 수출 최고)과 기사 3(채용 확대)이 이 전망을 뒷받침해요.", evidence: [1, 2, 3] },
+            bnd: { text: "기사 4에서 '경기가 달아오르면 시장 금리가 오를 수 있다'는 전망이 나왔어요. 금리가 실제로 오른 게 아니라 오를 거라는 예상이라, 시나리오 1(-10%)보다 손실이 작아요.", evidence: [4] }
+        },
+        note: "IT 기업의 +150%가 아니라 상장사 전체 숫자(+40%)를 봐야 해요. 주식 투자 수익은 시장 전체 흐름을 따르기 때문이에요."
+    },
+    4: {
+        issue: "제4호 · 202X년 3월",
+        title: "🟣 금융 위기 (블랙 스완 패닉)",
+        rates: "+2% / -40% / +5%",
+        summary: "대형 금융회사의 파산 위기가 금융시장과 기업을 함께 흔들었어요. 이럴 때는 '얼마나 벌까'보다 '내 돈을 지키는 것'이 중요해져요.",
+        headlines: [
+            "글로벌 대형 투자은행, 파생상품 손실로 파산 위기설",
+            "\"서로 못 믿겠다\"… 금융회사 간 돈 거래 끊기고 회사채 발행도 멈춰",
+            "해외 주문 취소 잇따라… 상장사 이익 전망 한 달 새 40% 줄어",
+            "중앙은행, 기준금리 1%p 긴급 인하… 정부 \"은행 예금은 법으로 보호\""
+        ],
+        chain: ["투자은행 파산 위기", "금융회사 간 불신", "회사채 시장 마비", "기업 이익 전망 -40%", "긴급 금리 인하 · 예금 보호"],
+        why: {
+            dep: { text: "기사 4에서 기준금리가 연 1.75%로 내려갔고, 정부가 예금은 법으로 보호된다고 밝혔어요. 원금은 안전하고 이자는 약 2%예요.", evidence: [4] },
+            stk: { text: "기사 3에서 이익 전망이 한 달 새 40% 줄었어요. 투자은행 파산 위기(기사 1) → 기업 자금줄 막힘(기사 2) → 주문 취소(기사 3)로 이어진 결과예요.", evidence: [1, 2, 3] },
+            bnd: { text: "두 힘이 섞였어요. 기사 4의 1%p 긴급 인하로 나라가 발행한 안전한 채권(국채)은 가격이 오르지만, 기사 2처럼 회사채 시장은 마비돼 회사채는 불리해요.", evidence: [2, 4] }
+        },
+        note: "시나리오 2와 같은 1%p 인하인데 채권 수익(+5%)이 +15%보다 작은 이유는, 회사채 위험이 있고 추가 인하 전망도 기사에 없기 때문이에요."
+    },
+    5: {
+        issue: "제5호 · 202X년 6월",
+        title: "🟢 골디락스 (안정적 이상적 성장)",
+        rates: "+3% / +15% / +5%",
+        summary: "물가는 안정되고 금리는 그대로이며, 기업 이익과 일자리가 고르게 늘었어요. 큰 충격이 없는 경제에서는 세 자산 모두 플러스 수익을 내기 쉬워요.",
+        headlines: [
+            "소비자물가 2.1% 상승… 1년째 2% 안팎 유지",
+            "상장사 영업이익 15% 증가 전망… 수출·내수 고르게 회복",
+            "중앙은행, 기준금리 연 2.75% 동결… \"지금 수준이 적절\"",
+            "취업자 수 꾸준히 증가… 소비자심리지수 기준선 웃돌아"
+        ],
+        chain: ["물가 2% 안정", "기준금리 2.75% 동결", "시장금리 안정", "기업 이익 +15%", "고용·소비 개선"],
+        why: {
+            dep: { text: "기사 3에서 기준금리가 연 2.75%로 동결돼 이자가 약 3%예요.", evidence: [3] },
+            stk: { text: "기사 2에서 상장사 이익이 15% 늘어날 전망이에요. 기사 4의 고용·소비 개선이 이를 뒷받침해요.", evidence: [2, 4] },
+            bnd: { text: "기사 3에서 시장금리가 안정적이라 가격 변화가 거의 없고, 수익은 대부분 이자예요.", evidence: [3] }
+        },
+        note: "채권(+5%)이 예금(+3%)보다 높은 이유는 기사 숫자가 아니라 원리에서 나와요. 채권은 예금보다 위험이 조금 더 있는 대신 이자가 조금 더 높아요."
+    }
+};
 const ASSETS = [['dep', '🏦 예금'], ['stk', '📈 주식'], ['bnd', '📜 채권']];
 
 // 턴별 기본 설정 (금액 단위: 만 원 / income·expense는 월 기준, 10년 잉여 자금 = (월 소득 - 월 생활비) × 120개월)
@@ -768,6 +883,7 @@ const pctText = n => (Math.abs(n) < 0.05 ? '0.0' : (n > 0 ? '+' : '') + n.toFixe
 const toneClass = n => n > 0 ? 'up' : (n < 0 ? 'down' : '');
 const readNum = id => parseFloat(document.getElementById(id).value) || 0;
 const setText = (id, text) => { document.getElementById(id).innerText = text; };
+const escapeHtml = str => String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // 만 원 단위 금액을 '1억 2,000만 원' 형태로 표시
 const wonText = n => {
     const eok = Math.floor(n / 10000), man = n % 10000;
@@ -1285,7 +1401,36 @@ function renderChoiceResult(turn) {
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// STEP 4 결과 발표: ① 투자 결과 → ② 총 이월 자금
+// 최종 완료 후 '왜 이렇게 나왔을까?': 흥덕 뉴스의 같은 번호 시나리오 기사·해설 + 내 투자 결과
+function whyHtml(rec) {
+    const news = scenarioNews[rec.scenarioNo];
+    const assets = ASSETS.map(([k, label]) => {
+        const diff = rec.res[k] - rec.inv[k];
+        return `<div class="why-asset">
+            <div class="why-asset-head">
+                <span>${label} <span class="${toneClass(rec.r[k])}">${rec.r[k] > 0 ? '+' : ''}${rec.r[k]}%</span></span>
+                <span class="why-mine">내 돈: ${fmt(rec.inv[k])}만 → ${fmt(rec.res[k])}만 원 (<span class="${toneClass(diff)}">${signed(diff)}만</span>)</span>
+            </div>
+            <p>${escapeHtml(news.why[k].text)}</p>
+            <div class="why-evidence">📎 근거: ${news.why[k].evidence.map(n => `기사 ${n}`).join(', ')}</div>
+        </div>`;
+    }).join('');
+    return `
+        <div class="why-meta">📰 흥덕 뉴스 ${escapeHtml(news.issue)} · <strong>시나리오 ${rec.scenarioNo}: ${escapeHtml(news.title)}</strong>
+            <a class="why-link" href="${NEWS_URL}" target="_blank" rel="noopener">신문 보러 가기 ↗</a>
+            <span class="sub-note">(사이트에서 '시나리오 ${rec.scenarioNo}' 탭)</span>
+        </div>
+        <p class="why-summary">${escapeHtml(news.summary)}</p>
+        <h5>🗞️ 이번 시나리오의 기사</h5>
+        <ol class="why-news">${news.headlines.map((h, i) => `<li><strong>기사 ${i + 1}</strong>${escapeHtml(h)}</li>`).join('')}</ol>
+        <h5>🔗 경제가 움직인 순서</h5>
+        <div class="why-chain">${news.chain.map(c => `<span>${escapeHtml(c)}</span>`).join('<span class="arrow">→</span>')}</div>
+        <h5>📊 자산별로 이렇게 된 이유</h5>
+        ${assets}
+        <div class="why-note">💡 ${escapeHtml(news.note)}</div>`;
+}
+
+// STEP 4 결과 발표: ① 투자 결과 → ② 왜 이렇게 나왔을까 → ③ 총 이월 자금
 function renderFinalResult(turn) {
     const rec = records[turn];
     const cfg = config[turn];
@@ -1319,15 +1464,19 @@ function renderFinalResult(turn) {
                 </table>
             </div>
         </div>
-        <div class="result-step total-box reveal" style="animation-delay:0.6s;">
-            <h4><span class="step-num">2</span>${totalLabel}</h4>
+        <div class="result-step reveal" style="animation-delay:0.6s;">
+            <h4><span class="step-num">2</span>왜 이렇게 나왔을까? (흥덕 뉴스 해설)</h4>
+            ${whyHtml(rec)}
+        </div>
+        <div class="result-step total-box reveal" style="animation-delay:1.2s;">
+            <h4><span class="step-num">3</span>${totalLabel}</h4>
             <div class="total-value">${fmt(rec.final)} 만 원</div>
             <div class="total-diff">${prevLabel} ${fmt(rec.carry)}만 원 대비 <span class="${toneClass(growth)}">${signed(growth)}만 원</span></div>
             <div class="total-breakdown">
                 투자 가능 여유 자금 ${fmt(rec.avail)}만 원 → ${parts} = <strong>${fmt(rec.final)}만 원</strong>
             </div>
         </div>
-        <div class="next-hint reveal" style="animation-delay:1.2s;">${nextHint}</div>
+        <div class="next-hint reveal" style="animation-delay:1.8s;">${nextHint}</div>
     `;
     el.style.display = 'block';
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
