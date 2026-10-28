@@ -79,6 +79,10 @@
         .choice-card .c-lock { margin-top: 8px; font-size: 0.8rem; color: #7c3aed; font-weight: bold; }
         .household-note { background: #f5f3ff; border-left: 4px solid #7c3aed; padding: 10px 14px; margin: 10px 0; border-radius: 4px; font-size: 0.95rem; }
         .household-note:empty { display: none; }
+        .choice-card .c-req { margin-top: 6px; font-size: 0.82rem; font-weight: bold; color: var(--success); }
+        .choice-card.unavailable { opacity: 0.6; background: #f1f5f9; cursor: not-allowed; }
+        .choice-card.unavailable:hover { border-color: var(--border); }
+        .choice-card.unavailable .c-req { color: var(--danger); }
         .turn-page.done .choice-card { cursor: default; }
         .turn-page.done .choice-card:hover { border-color: var(--border); }
         .turn-page.done .choice-card.selected:hover { border-color: var(--primary); }
@@ -527,11 +531,28 @@ const SALARY_APPLY_MONTHS = 60;  // 연봉 변화는 이번 턴 후반 5년간 �
 const HOUSEHOLD_YEARS = { 1: 5, 2: 10, 3: 10 };
 const household = {
     dual: { icon: '👫', title: '맞벌이', dualIncome: true, childcareRate: 90, childcareBase: '배우자 소득의',
-        hint: '30세에 결혼해 부부가 함께 돈을 법니다. 아이는 어린이집·돌봄 서비스에 맡깁니다.',
+        hint: '30세에 결혼해 부부가 함께 돈을 법니다. 아이는 어린이집·돌봄 서비스에 맡깁니다. (부업 불가)',
         resultDesc: '부부가 함께 벌어 가구 소득이 늘었습니다. 대신 배우자 소득의 90%가 육아비로 나갔습니다.' },
     single: { icon: '🏡', title: '외벌이', dualIncome: false, childcareRate: 10, childcareBase: '연봉의',
-        hint: '30세에 결혼해 한 사람만 돈을 벌고, 배우자가 집에서 아이를 돌봅니다.',
+        hint: '30세에 결혼해 한 사람만 돈을 벌고, 배우자가 집에서 아이를 돌봅니다. 남는 시간에 부업을 할 수 있습니다.',
         resultDesc: '연봉은 그대로였지만, 배우자가 아이를 돌봐 육아비는 연봉의 10%만 나갔습니다.' }
+};
+
+// 부업 (외벌이 전용, 1~3턴): 결과는 확률로 정해지고 금액 = 그 턴 연봉 × 가정 형태 적용 기간 × rate%
+// 기대값이 연봉의 약 20%라서 외벌이 + 부업 ≈ 맞벌이 (맞벌이는 안정적, 외벌이 + 부업은 위험이 큼)
+const sideJob = {
+    icon: '💻', title: '부업 (외벌이 전용)', hint: '남는 시간을 활용해 부업으로 부수입을 노립니다.',
+    sideJob: true, requires: 'single',
+    reqText: {
+        ok: '✅ 외벌이를 선택해서 부업을 할 수 있습니다.',
+        blocked: '⛔ 맞벌이를 선택했으므로 부업을 할 수 없습니다.',
+        pending: '👆 외벌이를 선택하면 부업을 할 수 있습니다.'
+    },
+    outcomes: [
+        { prob: 25, desc: '부업이 대박 났습니다! 온라인 스토어가 입소문을 탔습니다.', rate: 45 },
+        { prob: 50, desc: '꾸준히 해서 쏠쏠한 부수입을 올렸습니다.', rate: 20 },
+        { prob: 25, desc: '부업이 잘 안 풀려 장비·재료비만 날렸습니다.', rate: -5 }
+    ]
 };
 
 // 턴별 선택 사항 (수정사항: 선택지 2~3개로 확장 & 결과 비공개)
@@ -555,7 +576,8 @@ const choices = {
           outcomes: [
             { prob: 50, desc: '성공! 회사가 상장(IPO)해 스톡옵션 대박이 났습니다.', cash: 8000, salary: 20 },
             { prob: 50, desc: '실패… 회사가 폐업해 재취업까지 소득 공백이 생기고 연봉도 깎였습니다.', cash: -3000, salary: -10 }
-          ] }
+          ] },
+        sideJob
     ],
     2: [
         { icon: '🏠', title: '내집 마련 (주택담보대출 활용)', hint: '전세살이를 끝내고 내 집을 삽니다. 집값과 금리가 관건입니다.',
@@ -579,7 +601,8 @@ const choices = {
           ] },
         // 둘째 출산: 확률 없이 규칙대로 정산 (육아비 = 그 턴 연봉 × 10년 × 10%, 국가 지원금 = 육아비의 110%)
         { icon: '👶', title: '둘째 출산 (한 명 더 낳기)', hint: '가족이 한 명 늘어납니다. 육아비와 함께 국가 지원금도 정산됩니다.',
-          child: { years: 10, costRate: 10, subsidyRate: 110 } }
+          child: { years: 10, costRate: 10, subsidyRate: 110 } },
+        sideJob
     ],
     3: [
         { icon: '👵', title: '부모 부양 및 의료비 지원', hint: '연로하신 부모님의 생활비와 병원비를 지원합니다.',
@@ -588,7 +611,7 @@ const choices = {
             { prob: 35, desc: '장기 입원과 간병으로 의료비가 크게 늘었습니다.', cash: -6000, salary: 0 },
             { prob: 15, desc: '고마워하신 부모님이 시골 땅을 증여해 주셨습니다.', cash: 3000, salary: 0 }
           ] },
-        { icon: '🏪', title: '부업으로 프랜차이즈 가게 창업', hint: '퇴직 후를 대비해 미리 가게를 차려 봅니다.',
+        { icon: '🏪', title: '퇴직 대비 프랜차이즈 가게 창업', hint: '퇴직 후를 대비해 미리 가게를 차려 봅니다.',
           outcomes: [
             { prob: 25, desc: '동네 맛집으로 소문났습니다! 쏠쏠한 부수입이 생겼습니다.', cash: 9000, salary: 0 },
             { prob: 35, desc: '근근이 운영했지만 투자금 일부만 회수했습니다.', cash: -1500, salary: 0 },
@@ -599,7 +622,8 @@ const choices = {
             { prob: 30, desc: '임원 승진! 연봉이 크게 뛰었습니다.', cash: 1000, salary: 25 },
             { prob: 40, desc: '목표를 달성해 연봉이 소폭 올랐습니다.', cash: 0, salary: 8 },
             { prob: 30, desc: '목표 미달로 구조조정 대상이 되어 연봉이 깎였습니다. (위로금 지급)', cash: 2000, salary: -15 }
-          ] }
+          ] },
+        sideJob
     ],
     4: [
         { icon: '💍', title: '자녀 독립 및 결혼 지원', hint: '자녀의 결혼과 신혼집 마련을 도와줍니다.',
@@ -642,9 +666,28 @@ function renderChoices(turn) {
                 <div class="c-title">${c.icon} [선택] ${c.title}</div>
                 <div class="c-hint">${c.hint}</div>
                 <div class="c-lock">🔒 금액 · 이익/손실 여부 비공개</div>
+                ${c.requires ? `<div class="c-req" id="t${turn}_c_${i}_req"></div>` : ''}
             </div>
         </label>
     `).join('');
+    updateChoiceAvailability(turn);
+}
+
+// 가정 형태 조건이 있는 선택 사항(부업): 조건이 안 맞으면 안내 문구와 함께 선택 불가
+function updateChoiceAvailability(turn) {
+    const checked = document.querySelector('input[name="t1_household"]:checked');
+    const key = turn === 1 ? (checked && checked.value) : (records[1] && records[1].household.key);
+    choices[turn].forEach((c, i) => {
+        if (!c.requires) return;
+        const ok = key === c.requires;
+        const input = document.getElementById(`t${turn}_c_${i}`);
+        input.disabled = !ok;
+        if (!ok) input.checked = false;
+        const card = input.closest('.choice-card');
+        card.classList.toggle('unavailable', !ok);
+        card.classList.toggle('selected', input.checked);
+        setText(`t${turn}_c_${i}_req`, ok ? c.reqText.ok : (key ? c.reqText.blocked : c.reqText.pending));
+    });
 }
 
 // 1턴 가정 형태 카드 렌더링 (택1, 금액은 표시하지 않음)
@@ -665,6 +708,7 @@ function syncHousehold() {
     document.querySelectorAll('#t1_household .choice-card').forEach(card => {
         card.classList.toggle('selected', card.querySelector('input').checked);
     });
+    updateChoiceAvailability(1);
 }
 
 // 턴 시작 시점의 이월금과 연봉 배율 (이전 턴 정산 기록 기준)
@@ -724,8 +768,9 @@ function calcTurn(turn) {
     const hhNote = document.getElementById(`t${turn}_household_note`);
     if (hhNote) {
         const hh = records[1] && records[1].household;
-        hhNote.innerHTML = hh ? `${hh.icon} 가정 형태: <strong>${hh.title}</strong> 유지 중 (1턴에서 선택, 3턴까지) — 가정 형태에 따른 소득·육아비는 턴 종료 시 정산됩니다.` : '';
+        hhNote.innerHTML = hh ? `${hh.icon} 가정 형태: <strong>${hh.title}</strong> 유지 중 (1턴에서 선택, 3턴까지)${hh.key === sideJob.requires ? ' · 💻 부업 가능' : ' · 부업 불가'} — 가정 형태에 따른 소득·육아비는 턴 종료 시 정산됩니다.` : '';
     }
+    updateChoiceAvailability(turn);
 
     const availEl = document.getElementById(`t${turn}_avail`);
     availEl.innerText = fmt(avail);
@@ -775,6 +820,16 @@ function childOutcome(spec, salary) {
     };
 }
 
+// 선택 사항 결과 결정: 둘째 출산은 규칙 계산, 부업은 확률 추첨 후 연봉 비례 금액, 나머지는 확률 추첨
+function resolveOutcome(choice, salary, turn) {
+    if (choice.child) return childOutcome(choice.child, salary);
+    const o = pickOutcome(choice.outcomes);
+    if (!choice.sideJob) return o;
+    const years = HOUSEHOLD_YEARS[turn];
+    const basis = o.rate >= 0 ? `연봉의 ${o.rate}% × ${years}년` : `연봉의 ${-o.rate}% × ${years}년 손실`;
+    return { desc: `${o.desc} (${basis})`, cash: Math.round(salary * years * o.rate / 100), salary: 0 };
+}
+
 // 완료 버튼 처리: 선택 결과 공개 + 정산 후 상단 탭으로 다음 턴 이동 안내 (수정사항 다)
 function completeTurn(turn) {
     if (records[turn]) return;
@@ -790,11 +845,15 @@ function completeTurn(turn) {
         return;
     }
 
-    // 선택 사항 결과는 이 시점에 처음 정해지고 공개됨
+    // 가정 형태 (1턴에서 선택, 3턴까지 유지)
+    const hhKey = turn === 1 ? hhInput.value : records[1].household.key;
+
+    // 선택 사항 결과는 이 시점에 처음 정해지고 공개됨 (가정 형태 조건이 맞지 않는 항목은 제외)
     const picks = [];
     choices[turn].forEach((choice, i) => {
+        if (choice.requires && choice.requires !== hhKey) return;
         if (document.getElementById(`t${turn}_c_${i}`).checked) {
-            picks.push({ choice, outcome: choice.child ? childOutcome(choice.child, calc.salary) : pickOutcome(choice.outcomes) });
+            picks.push({ choice, outcome: resolveOutcome(choice, calc.salary, turn) });
         }
     });
 
@@ -805,8 +864,7 @@ function completeTurn(turn) {
     const salaryAfter = Math.round(monthlyAfter * 12);
     const salaryIncomeDelta = Math.round((monthlyAfter - calc.monthly) * SALARY_APPLY_MONTHS);
 
-    // 가정 형태 정산 (1턴에서 선택, 3턴까지 유지): 맞벌이는 배우자 소득 추가, 육아비는 기준 금액의 일정 비율
-    const hhKey = turn === 1 ? hhInput.value : records[1].household.key;
+    // 가정 형태 정산: 맞벌이는 배우자 소득 추가, 육아비는 기준 금액의 일정 비율
     const hhYears = HOUSEHOLD_YEARS[turn];
     let hh = null;
     if (hhYears) {
