@@ -67,19 +67,53 @@
         /* 선택 사항 카드 (결과 비공개) */
         .choice-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 10px 0 6px; }
         .choice-card {
-            display: flex; gap: 10px; align-items: flex-start; margin: 0; padding: 14px;
-            border: 2px solid var(--border); border-radius: 10px; background: #fff;
-            font-weight: normal; cursor: pointer; transition: all 0.2s;
+            display: flex; flex-direction: column; gap: 10px; padding: 14px;
+            border: 2px solid var(--border); border-radius: 10px; background: #fff; transition: all 0.2s;
         }
         .choice-card:hover { border-color: var(--primary); }
         .choice-card.selected { border-color: var(--primary); background: #eff6ff; }
-        .choice-card input { width: 18px; height: 18px; margin: 2px 0 0; flex-shrink: 0; cursor: pointer; }
+        .choice-main { display: flex; gap: 10px; align-items: flex-start; margin: 0; font-weight: normal; cursor: pointer; }
+        .choice-main input { width: 18px; height: 18px; margin: 2px 0 0; flex-shrink: 0; cursor: pointer; }
+        .choice-card .c-luck { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: #fef3c7; color: #92400e; vertical-align: middle; white-space: nowrap; }
+        .c-stake { border-top: 1px dashed var(--border); padding-top: 10px; font-size: 0.88rem; }
+        .c-stake-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-weight: bold; }
+        .c-stake input[type="number"] { width: 90px; padding: 6px 8px; font-size: 0.95rem; }
+        .c-stake-won { color: var(--primary); }
+        .c-stake-won.down { color: var(--danger); }
+        .c-stake-note { margin-top: 6px; color: #64748b; font-size: 0.8rem; line-height: 1.45; }
         .choice-card .c-title { font-weight: bold; margin-bottom: 4px; }
         .choice-card .c-hint { font-size: 0.88rem; color: #64748b; line-height: 1.45; }
         .choice-card .c-lock { margin-top: 8px; font-size: 0.8rem; color: #7c3aed; font-weight: bold; }
-        .turn-page.done .choice-card { cursor: default; }
-        .turn-page.done .choice-card:hover { border-color: var(--border); }
-        .turn-page.done .choice-card.selected:hover { border-color: var(--primary); }
+        .household-note { background: #f5f3ff; border-left: 4px solid #7c3aed; padding: 10px 14px; margin: 10px 0; border-radius: 4px; font-size: 0.95rem; }
+        .household-note:empty { display: none; }
+        .choice-card .c-req { margin-top: 6px; font-size: 0.82rem; font-weight: bold; color: var(--success); }
+        .choice-card.unavailable { opacity: 0.6; background: #f1f5f9; }
+        .choice-card.unavailable .choice-main { cursor: not-allowed; }
+        .choice-card.unavailable:hover { border-color: var(--border); }
+        .choice-card.unavailable .c-req { color: var(--danger); }
+
+        /* 턴 진행 단계 (STEP 1~4, 끝낸 단계는 되돌릴 수 없음) */
+        .step { border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-top: 18px; scroll-margin-top: 90px; transition: opacity 0.2s; }
+        .step.active { border: 2px solid var(--primary); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08); }
+        .step.done { border-color: #bbf7d0; background: #fcfffd; }
+        .step.locked { opacity: 0.5; }
+        .step-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 1.15rem; font-weight: bold; margin-bottom: 10px; }
+        .step-label { background: var(--primary); color: #fff; border-radius: 6px; padding: 2px 8px; font-size: 0.8rem; }
+        .step.done .step-label { background: var(--success); }
+        .step.locked .step-label { background: #94a3b8; }
+        .step-status { margin-left: auto; font-size: 0.85rem; color: #64748b; }
+        .step.active .step-status { color: var(--primary); }
+        .step.done .step-status { color: var(--success); }
+        .step.done .choice-main { cursor: default; }
+        .step.done .choice-card:hover { border-color: var(--border); }
+        .step.done .choice-card.selected:hover { border-color: var(--primary); }
+        .alloc-preview { margin: 8px 0 0; font-weight: bold; color: var(--primary); }
+        .scenario-card { margin-top: 12px; padding: 12px 14px; border: 2px solid var(--accent); border-radius: 10px; background: #fffbeb; font-weight: bold; font-size: 1.05rem; }
+        .scenario-rates { margin-top: 4px; font-size: 0.92rem; color: #92400e; }
+        .money-flow { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+        .money-flow td { padding: 7px 8px; border-bottom: 1px dashed #e2e8f0; }
+        .money-flow td:last-child { text-align: right; white-space: nowrap; font-weight: bold; }
+        .money-flow tr.total td { border-top: 2px solid var(--text); border-bottom: none; font-size: 1.05rem; color: var(--primary); }
 
         /* 자산별 정산 카드 */
         .asset-calc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 15px; }
@@ -115,6 +149,7 @@
         .outcome-card.mixed { border-left-color: var(--accent); background: #fffbeb; }
         .outcome-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: bold; }
         .outcome-desc { margin: 6px 0; color: #334155; font-size: 0.95rem; }
+        .outcome-luck { margin: 0 0 6px; color: #475569; font-size: 0.88rem; }
         .outcome-nums { display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.92rem; }
         .verdict { flex-shrink: 0; padding: 3px 10px; border-radius: 999px; font-size: 0.8rem; color: #fff; background: #94a3b8; }
         .verdict.gain { background: var(--success); }
@@ -165,8 +200,9 @@
 <div class="container">
     <h1>📊 생애주기 자산배분 경제 게임</h1>
     <p class="rule-note">
-        🎲 선택 사항의 <strong>금액과 이익/손실 여부는 턴 완료 버튼을 눌러야 공개</strong>됩니다.<br>
-        턴 완료 후 결과를 확인하고, <strong>화면 위의 다음 턴 탭</strong>을 눌러 넘어가세요.
+        진행 순서: <strong>STEP 1 선택 완료 → STEP 2 자산 배분 확정 → STEP 3 시나리오(1~5) 선택 → STEP 4 최종 완료</strong><br>
+        🎲 선택 사항의 금액과 이익/손실 여부는 <strong>선택 완료를 눌러야 공개</strong>되고, 끝낸 단계는 되돌릴 수 없습니다.<br>
+        최종 완료 후 <strong>화면 위의 다음 턴 탭</strong>을 눌러 넘어가세요.
     </p>
 
     <!-- 턴 선택 탭 -->
@@ -186,64 +222,87 @@
                 연봉: <strong id="t1_salary_txt">0</strong> 만 원<span id="t1_salary_diff"></span> │
                 10년 누적 잉여 자금: <strong id="t1_surplus_txt">0</strong> 만 원 <span id="t1_surplus_detail" class="sub-note"></span>
             </p>
-            <div class="checkbox-group">
-                <input type="checkbox" checked disabled> <strong>[필수] 결혼 및 전세 보증금 (-8,000만 원)</strong>
-            </div>
 
-            <h3>🎲 선택 사항 <span class="badge badge-lock">🔒 결과는 턴 완료 후 공개</span></h3>
-            <p class="sub-note">원하는 항목을 자유롭게 고르세요. 선택 사항의 비용·수익과 연봉 변화는 턴 완료 시 한꺼번에 정산됩니다.</p>
-            <div class="choice-list" id="t1_choices"></div>
-
-            <div class="highlight">
-                투자 가능 여유 자금: <span id="t1_avail" style="font-size:1.3em; color:#2563eb; font-weight:bold;">20,000</span> 만 원
-                <span class="sub-note">(이월금 + 10년 잉여 자금 - 필수 지출)</span>
-            </div>
-            <p id="t1_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
-
-            <h3>1. 자산 배분 비율 설정 (%)</h3>
-            <div class="grid">
-                <div><label>예금 (%)</label><input type="number" id="t1_p_dep" value="40" oninput="calcTurn(1)"></div>
-                <div><label>주식 (%)</label><input type="number" id="t1_p_stk" value="40" oninput="calcTurn(1)"></div>
-                <div><label>채권 (%)</label><input type="number" id="t1_p_bnd" value="20" oninput="calcTurn(1)"></div>
-            </div>
-            <p id="t1_warn" class="warning">⚠️ 각 비율은 0 이상이고, 합이 100%가 되어야 합니다!</p>
-
-            <h3>2. 교사 시나리오 선택 (수익률 입력)</h3>
-            <select id="t1_sc" onchange="applyScenario(1)">
-                <option value="custom">직접 입력 / 시나리오 선택</option>
-                <option value="rate">🔴 기준금리 인상 (예금 +5%, 주식 -20%, 채권 -10%)</option>
-                <option value="recess">🔵 기준금리 인하 (예금 +1%, 주식 -10%, 채권 +15%)</option>
-                <option value="tech">🟡 기술 혁신 (예금 +2%, 주식 +40%, 채권 -5%)</option>
-                <option value="crisis">🟣 금융 위기 (예금 +2%, 주식 -40%, 채권 +5%)</option>
-                <option value="gold">🟢 골디락스 (예금 +3%, 주식 +15%, 채권 +5%)</option>
-            </select>
-            <div class="grid" style="margin-top:10px;">
-                <div><label>예금 수익률 (%)</label><input type="number" id="t1_r_dep" value="0" oninput="calcTurn(1)"></div>
-                <div><label>주식 수익률 (%)</label><input type="number" id="t1_r_stk" value="0" oninput="calcTurn(1)"></div>
-                <div><label>채권 수익률 (%)</label><input type="number" id="t1_r_bnd" value="0" oninput="calcTurn(1)"></div>
-            </div>
-
-            <!-- 수익률 아래 자산별 정산 금액 표시 (수정사항 나) -->
-            <div class="asset-calc-grid">
-                <div class="asset-calc-card">
-                    <div class="title">🏦 예금 정산</div>
-                    <div class="detail">투자: <span id="t1_inv_dep">0</span>만 원</div>
-                    <div class="val">최종: <span id="t1_res_dep">0</span>만 원</div>
+            <!-- STEP 1: 지출과 선택 -->
+            <div class="step" id="t1_step1">
+                <div class="step-head"><span class="step-label">STEP 1</span> 지출과 선택 <span class="step-status" id="t1_status1"></span></div>
+                <div class="checkbox-group">
+                    <input type="checkbox" checked disabled data-fixed> <strong>[필수] 결혼 및 전세 보증금 (-8,000만 원)</strong>
                 </div>
-                <div class="asset-calc-card">
-                    <div class="title">📈 주식 정산</div>
-                    <div class="detail">투자: <span id="t1_inv_stk">0</span>만 원</div>
-                    <div class="val">최종: <span id="t1_res_stk">0</span>만 원</div>
+
+                <h3>👨‍👩‍👧 가정 형태 선택 (필수 택1) <span class="badge badge-lock">🔒 결과는 선택 완료 후 공개</span></h3>
+                <p class="sub-note">30세에 결혼한다고 가정합니다. 고른 가정 형태는 3턴(54세)까지 유지되며, 매 턴 선택 완료 시 정산됩니다.</p>
+                <div class="choice-list" id="t1_household"></div>
+
+                <h3>🎲 선택 사항 <span class="badge badge-lock">🔒 결과는 선택 완료 후 공개</span></h3>
+                <p class="sub-note">원하는 항목을 자유롭게 고르세요. 🎲 표시가 있는 운 선택지는 거는 돈을 정할 수 있습니다. 선택 완료를 누르면 결과가 공개되고, 이후에는 되돌릴 수 없습니다.</p>
+                <div class="choice-list" id="t1_choices"></div>
+
+                <button class="btn-complete" id="t1_btn_choice" onclick="completeChoices(1)">✅ 선택 완료 (결과 확인)</button>
+                <div class="turn-result" id="t1_choice_result" style="display:none;"></div>
+            </div>
+
+            <!-- STEP 2: 자산 배분 -->
+            <div class="step" id="t1_step2">
+                <div class="step-head"><span class="step-label">STEP 2</span> 자산 배분 <span class="step-status" id="t1_status2"></span></div>
+                <div class="highlight">
+                    투자 가능 여유 자금: <span id="t1_avail" style="font-size:1.3em; color:#2563eb; font-weight:bold;">-</span> 만 원
+                    <span class="sub-note">(STEP 1 결과 반영)</span>
                 </div>
-                <div class="asset-calc-card">
-                    <div class="title">📜 채권 정산</div>
-                    <div class="detail">투자: <span id="t1_inv_bnd">0</span>만 원</div>
-                    <div class="val">최종: <span id="t1_res_bnd">0</span>만 원</div>
+                <p id="t1_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
+
+                <div class="grid">
+                    <div><label>예금 (%)</label><input type="number" id="t1_p_dep" value="40" oninput="previewAllocation(1)"></div>
+                    <div><label>주식 (%)</label><input type="number" id="t1_p_stk" value="40" oninput="previewAllocation(1)"></div>
+                    <div><label>채권 (%)</label><input type="number" id="t1_p_bnd" value="20" oninput="previewAllocation(1)"></div>
+                </div>
+                <p id="t1_warn" class="warning">⚠️ 각 비율은 0 이상이고, 합이 100%가 되어야 합니다!</p>
+                <p class="alloc-preview" id="t1_alloc_preview"></p>
+
+                <button class="btn-complete" id="t1_btn_alloc" onclick="confirmAllocation(1)">🔒 자산 배분 확정</button>
+            </div>
+
+            <!-- STEP 3: 경제 시나리오 (번호로 고르면 내용과 투자 결과 공개) -->
+            <div class="step" id="t1_step3">
+                <div class="step-head"><span class="step-label">STEP 3</span> 경제 시나리오 <span class="step-status" id="t1_status3"></span></div>
+                <select id="t1_sc" onchange="applyScenario(1)">
+                    <option value="">시나리오 번호를 선택하세요</option>
+                    <option value="1">시나리오 1</option>
+                    <option value="2">시나리오 2</option>
+                    <option value="3">시나리오 3</option>
+                    <option value="4">시나리오 4</option>
+                    <option value="5">시나리오 5</option>
+                </select>
+                <div id="t1_sc_info"></div>
+
+                <div class="asset-calc-grid">
+                    <div class="asset-calc-card">
+                        <div class="title">🏦 예금</div>
+                        <div class="detail">투자: <span id="t1_inv_dep">-</span></div>
+                        <div class="detail">수익률: <span id="t1_rate_dep">-</span></div>
+                        <div class="val">최종: <span id="t1_res_dep">-</span></div>
+                    </div>
+                    <div class="asset-calc-card">
+                        <div class="title">📈 주식</div>
+                        <div class="detail">투자: <span id="t1_inv_stk">-</span></div>
+                        <div class="detail">수익률: <span id="t1_rate_stk">-</span></div>
+                        <div class="val">최종: <span id="t1_res_stk">-</span></div>
+                    </div>
+                    <div class="asset-calc-card">
+                        <div class="title">📜 채권</div>
+                        <div class="detail">투자: <span id="t1_inv_bnd">-</span></div>
+                        <div class="detail">수익률: <span id="t1_rate_bnd">-</span></div>
+                        <div class="val">최종: <span id="t1_res_bnd">-</span></div>
+                    </div>
                 </div>
             </div>
 
-            <button class="btn-complete" id="t1_btn" onclick="completeTurn(1)">✅ 1턴 완료 ➔ 결과 확인</button>
-            <div class="turn-result" id="t1_result" style="display:none;"></div>
+            <!-- STEP 4: 최종 완료 -->
+            <div class="step" id="t1_step4">
+                <div class="step-head"><span class="step-label">STEP 4</span> 최종 완료 <span class="step-status" id="t1_status4"></span></div>
+                <button class="btn-complete" id="t1_btn_final" onclick="completeTurn(1)">🏁 1턴 최종 완료 (이월 자금 확인)</button>
+                <div class="turn-result" id="t1_result" style="display:none;"></div>
+            </div>
         </div>
     </div>
 
@@ -256,64 +315,84 @@
                 연봉: <strong id="t2_salary_txt">0</strong> 만 원<span id="t2_salary_diff"></span> │
                 10년 잉여 자금: <strong id="t2_surplus_txt">0</strong> 만 원 <span id="t2_surplus_detail" class="sub-note"></span>
             </p>
-            <div class="checkbox-group">
-                <input type="checkbox" checked disabled> <strong>[필수] 출산 및 영유아/초등 양육비 (-6,000만 원)</strong>
-            </div>
 
-            <h3>🎲 선택 사항 <span class="badge badge-lock">🔒 결과는 턴 완료 후 공개</span></h3>
-            <p class="sub-note">원하는 항목을 자유롭게 고르세요. 선택 사항의 비용·수익과 연봉 변화는 턴 완료 시 한꺼번에 정산됩니다.</p>
-            <div class="choice-list" id="t2_choices"></div>
-
-            <div class="highlight">
-                투자 가능 여유 자금: <span id="t2_avail" style="font-size:1.3em; color:#2563eb; font-weight:bold;">0</span> 만 원
-                <span class="sub-note">(이월금 + 10년 잉여 자금 - 필수 지출)</span>
-            </div>
-            <p id="t2_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
-
-            <h3>1. 자산 배분 비율 설정 (%)</h3>
-            <div class="grid">
-                <div><label>예금 (%)</label><input type="number" id="t2_p_dep" value="40" oninput="calcTurn(2)"></div>
-                <div><label>주식 (%)</label><input type="number" id="t2_p_stk" value="40" oninput="calcTurn(2)"></div>
-                <div><label>채권 (%)</label><input type="number" id="t2_p_bnd" value="20" oninput="calcTurn(2)"></div>
-            </div>
-            <p id="t2_warn" class="warning">⚠️ 각 비율은 0 이상이고, 합이 100%가 되어야 합니다!</p>
-
-            <h3>2. 교사 시나리오 선택 (수익률 입력)</h3>
-            <select id="t2_sc" onchange="applyScenario(2)">
-                <option value="custom">직접 입력 / 시나리오 선택</option>
-                <option value="rate">🔴 기준금리 인상 (예금 +5%, 주식 -20%, 채권 -10%)</option>
-                <option value="recess">🔵 기준금리 인하 (예금 +1%, 주식 -10%, 채권 +15%)</option>
-                <option value="tech">🟡 기술 혁신 (예금 +2%, 주식 +40%, 채권 -5%)</option>
-                <option value="crisis">🟣 금융 위기 (예금 +2%, 주식 -40%, 채권 +5%)</option>
-                <option value="gold">🟢 골디락스 (예금 +3%, 주식 +15%, 채권 +5%)</option>
-            </select>
-            <div class="grid" style="margin-top:10px;">
-                <div><label>예금 수익률 (%)</label><input type="number" id="t2_r_dep" value="0" oninput="calcTurn(2)"></div>
-                <div><label>주식 수익률 (%)</label><input type="number" id="t2_r_stk" value="0" oninput="calcTurn(2)"></div>
-                <div><label>채권 수익률 (%)</label><input type="number" id="t2_r_bnd" value="0" oninput="calcTurn(2)"></div>
-            </div>
-
-            <!-- 수익률 아래 자산별 정산 금액 표시 (수정사항 나) -->
-            <div class="asset-calc-grid">
-                <div class="asset-calc-card">
-                    <div class="title">🏦 예금 정산</div>
-                    <div class="detail">투자: <span id="t2_inv_dep">0</span>만 원</div>
-                    <div class="val">최종: <span id="t2_res_dep">0</span>만 원</div>
+            <!-- STEP 1: 지출과 선택 -->
+            <div class="step" id="t2_step1">
+                <div class="step-head"><span class="step-label">STEP 1</span> 지출과 선택 <span class="step-status" id="t2_status1"></span></div>
+                <div class="checkbox-group">
+                    <input type="checkbox" checked disabled data-fixed> <strong>[필수] 출산 및 영유아/초등 양육비 (-6,000만 원)</strong>
                 </div>
-                <div class="asset-calc-card">
-                    <div class="title">📈 주식 정산</div>
-                    <div class="detail">투자: <span id="t2_inv_stk">0</span>만 원</div>
-                    <div class="val">최종: <span id="t2_res_stk">0</span>만 원</div>
+                <div class="household-note" id="t2_household_note"></div>
+
+                <h3>🎲 선택 사항 <span class="badge badge-lock">🔒 결과는 선택 완료 후 공개</span></h3>
+                <p class="sub-note">원하는 항목을 자유롭게 고르세요. 🎲 표시가 있는 운 선택지는 거는 돈을 정할 수 있습니다. 선택 완료를 누르면 결과가 공개되고, 이후에는 되돌릴 수 없습니다.</p>
+                <div class="choice-list" id="t2_choices"></div>
+
+                <button class="btn-complete" id="t2_btn_choice" onclick="completeChoices(2)">✅ 선택 완료 (결과 확인)</button>
+                <div class="turn-result" id="t2_choice_result" style="display:none;"></div>
+            </div>
+
+            <!-- STEP 2: 자산 배분 -->
+            <div class="step" id="t2_step2">
+                <div class="step-head"><span class="step-label">STEP 2</span> 자산 배분 <span class="step-status" id="t2_status2"></span></div>
+                <div class="highlight">
+                    투자 가능 여유 자금: <span id="t2_avail" style="font-size:1.3em; color:#2563eb; font-weight:bold;">-</span> 만 원
+                    <span class="sub-note">(STEP 1 결과 반영)</span>
                 </div>
-                <div class="asset-calc-card">
-                    <div class="title">📜 채권 정산</div>
-                    <div class="detail">투자: <span id="t2_inv_bnd">0</span>만 원</div>
-                    <div class="val">최종: <span id="t2_res_bnd">0</span>만 원</div>
+                <p id="t2_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
+
+                <div class="grid">
+                    <div><label>예금 (%)</label><input type="number" id="t2_p_dep" value="40" oninput="previewAllocation(2)"></div>
+                    <div><label>주식 (%)</label><input type="number" id="t2_p_stk" value="40" oninput="previewAllocation(2)"></div>
+                    <div><label>채권 (%)</label><input type="number" id="t2_p_bnd" value="20" oninput="previewAllocation(2)"></div>
+                </div>
+                <p id="t2_warn" class="warning">⚠️ 각 비율은 0 이상이고, 합이 100%가 되어야 합니다!</p>
+                <p class="alloc-preview" id="t2_alloc_preview"></p>
+
+                <button class="btn-complete" id="t2_btn_alloc" onclick="confirmAllocation(2)">🔒 자산 배분 확정</button>
+            </div>
+
+            <!-- STEP 3: 경제 시나리오 (번호로 고르면 내용과 투자 결과 공개) -->
+            <div class="step" id="t2_step3">
+                <div class="step-head"><span class="step-label">STEP 3</span> 경제 시나리오 <span class="step-status" id="t2_status3"></span></div>
+                <select id="t2_sc" onchange="applyScenario(2)">
+                    <option value="">시나리오 번호를 선택하세요</option>
+                    <option value="1">시나리오 1</option>
+                    <option value="2">시나리오 2</option>
+                    <option value="3">시나리오 3</option>
+                    <option value="4">시나리오 4</option>
+                    <option value="5">시나리오 5</option>
+                </select>
+                <div id="t2_sc_info"></div>
+
+                <div class="asset-calc-grid">
+                    <div class="asset-calc-card">
+                        <div class="title">🏦 예금</div>
+                        <div class="detail">투자: <span id="t2_inv_dep">-</span></div>
+                        <div class="detail">수익률: <span id="t2_rate_dep">-</span></div>
+                        <div class="val">최종: <span id="t2_res_dep">-</span></div>
+                    </div>
+                    <div class="asset-calc-card">
+                        <div class="title">📈 주식</div>
+                        <div class="detail">투자: <span id="t2_inv_stk">-</span></div>
+                        <div class="detail">수익률: <span id="t2_rate_stk">-</span></div>
+                        <div class="val">최종: <span id="t2_res_stk">-</span></div>
+                    </div>
+                    <div class="asset-calc-card">
+                        <div class="title">📜 채권</div>
+                        <div class="detail">투자: <span id="t2_inv_bnd">-</span></div>
+                        <div class="detail">수익률: <span id="t2_rate_bnd">-</span></div>
+                        <div class="val">최종: <span id="t2_res_bnd">-</span></div>
+                    </div>
                 </div>
             </div>
 
-            <button class="btn-complete" id="t2_btn" onclick="completeTurn(2)">✅ 2턴 완료 ➔ 결과 확인</button>
-            <div class="turn-result" id="t2_result" style="display:none;"></div>
+            <!-- STEP 4: 최종 완료 -->
+            <div class="step" id="t2_step4">
+                <div class="step-head"><span class="step-label">STEP 4</span> 최종 완료 <span class="step-status" id="t2_status4"></span></div>
+                <button class="btn-complete" id="t2_btn_final" onclick="completeTurn(2)">🏁 2턴 최종 완료 (이월 자금 확인)</button>
+                <div class="turn-result" id="t2_result" style="display:none;"></div>
+            </div>
         </div>
     </div>
 
@@ -326,64 +405,84 @@
                 연봉: <strong id="t3_salary_txt">0</strong> 만 원<span id="t3_salary_diff"></span> │
                 10년 잉여 자금: <strong id="t3_surplus_txt">0</strong> 만 원 <span id="t3_surplus_detail" class="sub-note"></span>
             </p>
-            <div class="checkbox-group">
-                <input type="checkbox" checked disabled> <strong>[필수] 중·고등·대학 등록금/사교육 (-10,000만 원)</strong>
-            </div>
 
-            <h3>🎲 선택 사항 <span class="badge badge-lock">🔒 결과는 턴 완료 후 공개</span></h3>
-            <p class="sub-note">원하는 항목을 자유롭게 고르세요. 선택 사항의 비용·수익과 연봉 변화는 턴 완료 시 한꺼번에 정산됩니다.</p>
-            <div class="choice-list" id="t3_choices"></div>
-
-            <div class="highlight">
-                투자 가능 여유 자금: <span id="t3_avail" style="font-size:1.3em; color:#2563eb; font-weight:bold;">0</span> 만 원
-                <span class="sub-note">(이월금 + 10년 잉여 자금 - 필수 지출)</span>
-            </div>
-            <p id="t3_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
-
-            <h3>1. 자산 배분 비율 설정 (%)</h3>
-            <div class="grid">
-                <div><label>예금 (%)</label><input type="number" id="t3_p_dep" value="30" oninput="calcTurn(3)"></div>
-                <div><label>주식 (%)</label><input type="number" id="t3_p_stk" value="40" oninput="calcTurn(3)"></div>
-                <div><label>채권 (%)</label><input type="number" id="t3_p_bnd" value="30" oninput="calcTurn(3)"></div>
-            </div>
-            <p id="t3_warn" class="warning">⚠️ 각 비율은 0 이상이고, 합이 100%가 되어야 합니다!</p>
-
-            <h3>2. 교사 시나리오 선택 (수익률 입력)</h3>
-            <select id="t3_sc" onchange="applyScenario(3)">
-                <option value="custom">직접 입력 / 시나리오 선택</option>
-                <option value="rate">🔴 기준금리 인상 (예금 +5%, 주식 -20%, 채권 -10%)</option>
-                <option value="recess">🔵 기준금리 인하 (예금 +1%, 주식 -10%, 채권 +15%)</option>
-                <option value="tech">🟡 기술 혁신 (예금 +2%, 주식 +40%, 채권 -5%)</option>
-                <option value="crisis">🟣 금융 위기 (예금 +2%, 주식 -40%, 채권 +5%)</option>
-                <option value="gold">🟢 골디락스 (예금 +3%, 주식 +15%, 채권 +5%)</option>
-            </select>
-            <div class="grid" style="margin-top:10px;">
-                <div><label>예금 수익률 (%)</label><input type="number" id="t3_r_dep" value="0" oninput="calcTurn(3)"></div>
-                <div><label>주식 수익률 (%)</label><input type="number" id="t3_r_stk" value="0" oninput="calcTurn(3)"></div>
-                <div><label>채권 수익률 (%)</label><input type="number" id="t3_r_bnd" value="0" oninput="calcTurn(3)"></div>
-            </div>
-
-            <!-- 수익률 아래 자산별 정산 금액 표시 (수정사항 나) -->
-            <div class="asset-calc-grid">
-                <div class="asset-calc-card">
-                    <div class="title">🏦 예금 정산</div>
-                    <div class="detail">투자: <span id="t3_inv_dep">0</span>만 원</div>
-                    <div class="val">최종: <span id="t3_res_dep">0</span>만 원</div>
+            <!-- STEP 1: 지출과 선택 -->
+            <div class="step" id="t3_step1">
+                <div class="step-head"><span class="step-label">STEP 1</span> 지출과 선택 <span class="step-status" id="t3_status1"></span></div>
+                <div class="checkbox-group">
+                    <input type="checkbox" checked disabled data-fixed> <strong>[필수] 중·고등·대학 등록금/사교육 (-10,000만 원)</strong>
                 </div>
-                <div class="asset-calc-card">
-                    <div class="title">📈 주식 정산</div>
-                    <div class="detail">투자: <span id="t3_inv_stk">0</span>만 원</div>
-                    <div class="val">최종: <span id="t3_res_stk">0</span>만 원</div>
+                <div class="household-note" id="t3_household_note"></div>
+
+                <h3>🎲 선택 사항 <span class="badge badge-lock">🔒 결과는 선택 완료 후 공개</span></h3>
+                <p class="sub-note">원하는 항목을 자유롭게 고르세요. 🎲 표시가 있는 운 선택지는 거는 돈을 정할 수 있습니다. 선택 완료를 누르면 결과가 공개되고, 이후에는 되돌릴 수 없습니다.</p>
+                <div class="choice-list" id="t3_choices"></div>
+
+                <button class="btn-complete" id="t3_btn_choice" onclick="completeChoices(3)">✅ 선택 완료 (결과 확인)</button>
+                <div class="turn-result" id="t3_choice_result" style="display:none;"></div>
+            </div>
+
+            <!-- STEP 2: 자산 배분 -->
+            <div class="step" id="t3_step2">
+                <div class="step-head"><span class="step-label">STEP 2</span> 자산 배분 <span class="step-status" id="t3_status2"></span></div>
+                <div class="highlight">
+                    투자 가능 여유 자금: <span id="t3_avail" style="font-size:1.3em; color:#2563eb; font-weight:bold;">-</span> 만 원
+                    <span class="sub-note">(STEP 1 결과 반영)</span>
                 </div>
-                <div class="asset-calc-card">
-                    <div class="title">📜 채권 정산</div>
-                    <div class="detail">투자: <span id="t3_inv_bnd">0</span>만 원</div>
-                    <div class="val">최종: <span id="t3_res_bnd">0</span>만 원</div>
+                <p id="t3_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
+
+                <div class="grid">
+                    <div><label>예금 (%)</label><input type="number" id="t3_p_dep" value="30" oninput="previewAllocation(3)"></div>
+                    <div><label>주식 (%)</label><input type="number" id="t3_p_stk" value="40" oninput="previewAllocation(3)"></div>
+                    <div><label>채권 (%)</label><input type="number" id="t3_p_bnd" value="30" oninput="previewAllocation(3)"></div>
+                </div>
+                <p id="t3_warn" class="warning">⚠️ 각 비율은 0 이상이고, 합이 100%가 되어야 합니다!</p>
+                <p class="alloc-preview" id="t3_alloc_preview"></p>
+
+                <button class="btn-complete" id="t3_btn_alloc" onclick="confirmAllocation(3)">🔒 자산 배분 확정</button>
+            </div>
+
+            <!-- STEP 3: 경제 시나리오 (번호로 고르면 내용과 투자 결과 공개) -->
+            <div class="step" id="t3_step3">
+                <div class="step-head"><span class="step-label">STEP 3</span> 경제 시나리오 <span class="step-status" id="t3_status3"></span></div>
+                <select id="t3_sc" onchange="applyScenario(3)">
+                    <option value="">시나리오 번호를 선택하세요</option>
+                    <option value="1">시나리오 1</option>
+                    <option value="2">시나리오 2</option>
+                    <option value="3">시나리오 3</option>
+                    <option value="4">시나리오 4</option>
+                    <option value="5">시나리오 5</option>
+                </select>
+                <div id="t3_sc_info"></div>
+
+                <div class="asset-calc-grid">
+                    <div class="asset-calc-card">
+                        <div class="title">🏦 예금</div>
+                        <div class="detail">투자: <span id="t3_inv_dep">-</span></div>
+                        <div class="detail">수익률: <span id="t3_rate_dep">-</span></div>
+                        <div class="val">최종: <span id="t3_res_dep">-</span></div>
+                    </div>
+                    <div class="asset-calc-card">
+                        <div class="title">📈 주식</div>
+                        <div class="detail">투자: <span id="t3_inv_stk">-</span></div>
+                        <div class="detail">수익률: <span id="t3_rate_stk">-</span></div>
+                        <div class="val">최종: <span id="t3_res_stk">-</span></div>
+                    </div>
+                    <div class="asset-calc-card">
+                        <div class="title">📜 채권</div>
+                        <div class="detail">투자: <span id="t3_inv_bnd">-</span></div>
+                        <div class="detail">수익률: <span id="t3_rate_bnd">-</span></div>
+                        <div class="val">최종: <span id="t3_res_bnd">-</span></div>
+                    </div>
                 </div>
             </div>
 
-            <button class="btn-complete" id="t3_btn" onclick="completeTurn(3)">✅ 3턴 완료 ➔ 결과 확인</button>
-            <div class="turn-result" id="t3_result" style="display:none;"></div>
+            <!-- STEP 4: 최종 완료 -->
+            <div class="step" id="t3_step4">
+                <div class="step-head"><span class="step-label">STEP 4</span> 최종 완료 <span class="step-status" id="t3_status4"></span></div>
+                <button class="btn-complete" id="t3_btn_final" onclick="completeTurn(3)">🏁 3턴 최종 완료 (이월 자금 확인)</button>
+                <div class="turn-result" id="t3_result" style="display:none;"></div>
+            </div>
         </div>
     </div>
 
@@ -396,64 +495,83 @@
                 연봉: <strong id="t4_salary_txt">0</strong> 만 원<span id="t4_salary_diff"></span> │
                 10년 잉여 자금: <strong id="t4_surplus_txt">0</strong> 만 원 <span id="t4_surplus_detail" class="sub-note"></span>
             </p>
-            <div class="checkbox-group">
-                <input type="checkbox" checked disabled> <strong>[필수] 노후 의료비 및 간병비 (-6,000만 원)</strong>
-            </div>
 
-            <h3>🎲 선택 사항 <span class="badge badge-lock">🔒 결과는 턴 완료 후 공개</span></h3>
-            <p class="sub-note">원하는 항목을 자유롭게 고르세요. 선택 사항의 비용·수익과 연봉 변화는 턴 완료 시 한꺼번에 정산됩니다.</p>
-            <div class="choice-list" id="t4_choices"></div>
-
-            <div class="highlight">
-                투자 가능 여유 자금: <span id="t4_avail" style="font-size:1.3em; color:#2563eb; font-weight:bold;">0</span> 만 원
-                <span class="sub-note">(이월금 + 10년 잉여 자금 - 필수 지출)</span>
-            </div>
-            <p id="t4_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
-
-            <h3>1. 자산 배분 비율 설정 (%)</h3>
-            <div class="grid">
-                <div><label>예금 (%)</label><input type="number" id="t4_p_dep" value="60" oninput="calcTurn(4)"></div>
-                <div><label>주식 (%)</label><input type="number" id="t4_p_stk" value="20" oninput="calcTurn(4)"></div>
-                <div><label>채권 (%)</label><input type="number" id="t4_p_bnd" value="20" oninput="calcTurn(4)"></div>
-            </div>
-            <p id="t4_warn" class="warning">⚠️ 각 비율은 0 이상이고, 합이 100%가 되어야 합니다!</p>
-
-            <h3>2. 교사 시나리오 선택 (수익률 입력)</h3>
-            <select id="t4_sc" onchange="applyScenario(4)">
-                <option value="custom">직접 입력 / 시나리오 선택</option>
-                <option value="rate">🔴 기준금리 인상 (예금 +5%, 주식 -20%, 채권 -10%)</option>
-                <option value="recess">🔵 기준금리 인하 (예금 +1%, 주식 -10%, 채권 +15%)</option>
-                <option value="tech">🟡 기술 혁신 (예금 +2%, 주식 +40%, 채권 -5%)</option>
-                <option value="crisis">🟣 금융 위기 (예금 +2%, 주식 -40%, 채권 +5%)</option>
-                <option value="gold">🟢 골디락스 (예금 +3%, 주식 +15%, 채권 +5%)</option>
-            </select>
-            <div class="grid" style="margin-top:10px;">
-                <div><label>예금 수익률 (%)</label><input type="number" id="t4_r_dep" value="0" oninput="calcTurn(4)"></div>
-                <div><label>주식 수익률 (%)</label><input type="number" id="t4_r_stk" value="0" oninput="calcTurn(4)"></div>
-                <div><label>채권 수익률 (%)</label><input type="number" id="t4_r_bnd" value="0" oninput="calcTurn(4)"></div>
-            </div>
-
-            <!-- 수익률 아래 자산별 정산 금액 표시 (수정사항 나) -->
-            <div class="asset-calc-grid">
-                <div class="asset-calc-card">
-                    <div class="title">🏦 예금 정산</div>
-                    <div class="detail">투자: <span id="t4_inv_dep">0</span>만 원</div>
-                    <div class="val">최종: <span id="t4_res_dep">0</span>만 원</div>
+            <!-- STEP 1: 지출과 선택 -->
+            <div class="step" id="t4_step1">
+                <div class="step-head"><span class="step-label">STEP 1</span> 지출과 선택 <span class="step-status" id="t4_status1"></span></div>
+                <div class="checkbox-group">
+                    <input type="checkbox" checked disabled data-fixed> <strong>[필수] 노후 의료비 및 간병비 (-6,000만 원)</strong>
                 </div>
-                <div class="asset-calc-card">
-                    <div class="title">📈 주식 정산</div>
-                    <div class="detail">투자: <span id="t4_inv_stk">0</span>만 원</div>
-                    <div class="val">최종: <span id="t4_res_stk">0</span>만 원</div>
+
+                <h3>🎲 선택 사항 <span class="badge badge-lock">🔒 결과는 선택 완료 후 공개</span></h3>
+                <p class="sub-note">원하는 항목을 자유롭게 고르세요. 🎲 표시가 있는 운 선택지는 거는 돈을 정할 수 있습니다. 선택 완료를 누르면 결과가 공개되고, 이후에는 되돌릴 수 없습니다.</p>
+                <div class="choice-list" id="t4_choices"></div>
+
+                <button class="btn-complete" id="t4_btn_choice" onclick="completeChoices(4)">✅ 선택 완료 (결과 확인)</button>
+                <div class="turn-result" id="t4_choice_result" style="display:none;"></div>
+            </div>
+
+            <!-- STEP 2: 자산 배분 -->
+            <div class="step" id="t4_step2">
+                <div class="step-head"><span class="step-label">STEP 2</span> 자산 배분 <span class="step-status" id="t4_status2"></span></div>
+                <div class="highlight">
+                    투자 가능 여유 자금: <span id="t4_avail" style="font-size:1.3em; color:#2563eb; font-weight:bold;">-</span> 만 원
+                    <span class="sub-note">(STEP 1 결과 반영)</span>
                 </div>
-                <div class="asset-calc-card">
-                    <div class="title">📜 채권 정산</div>
-                    <div class="detail">투자: <span id="t4_inv_bnd">0</span>만 원</div>
-                    <div class="val">최종: <span id="t4_res_bnd">0</span>만 원</div>
+                <p id="t4_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
+
+                <div class="grid">
+                    <div><label>예금 (%)</label><input type="number" id="t4_p_dep" value="60" oninput="previewAllocation(4)"></div>
+                    <div><label>주식 (%)</label><input type="number" id="t4_p_stk" value="20" oninput="previewAllocation(4)"></div>
+                    <div><label>채권 (%)</label><input type="number" id="t4_p_bnd" value="20" oninput="previewAllocation(4)"></div>
+                </div>
+                <p id="t4_warn" class="warning">⚠️ 각 비율은 0 이상이고, 합이 100%가 되어야 합니다!</p>
+                <p class="alloc-preview" id="t4_alloc_preview"></p>
+
+                <button class="btn-complete" id="t4_btn_alloc" onclick="confirmAllocation(4)">🔒 자산 배분 확정</button>
+            </div>
+
+            <!-- STEP 3: 경제 시나리오 (번호로 고르면 내용과 투자 결과 공개) -->
+            <div class="step" id="t4_step3">
+                <div class="step-head"><span class="step-label">STEP 3</span> 경제 시나리오 <span class="step-status" id="t4_status3"></span></div>
+                <select id="t4_sc" onchange="applyScenario(4)">
+                    <option value="">시나리오 번호를 선택하세요</option>
+                    <option value="1">시나리오 1</option>
+                    <option value="2">시나리오 2</option>
+                    <option value="3">시나리오 3</option>
+                    <option value="4">시나리오 4</option>
+                    <option value="5">시나리오 5</option>
+                </select>
+                <div id="t4_sc_info"></div>
+
+                <div class="asset-calc-grid">
+                    <div class="asset-calc-card">
+                        <div class="title">🏦 예금</div>
+                        <div class="detail">투자: <span id="t4_inv_dep">-</span></div>
+                        <div class="detail">수익률: <span id="t4_rate_dep">-</span></div>
+                        <div class="val">최종: <span id="t4_res_dep">-</span></div>
+                    </div>
+                    <div class="asset-calc-card">
+                        <div class="title">📈 주식</div>
+                        <div class="detail">투자: <span id="t4_inv_stk">-</span></div>
+                        <div class="detail">수익률: <span id="t4_rate_stk">-</span></div>
+                        <div class="val">최종: <span id="t4_res_stk">-</span></div>
+                    </div>
+                    <div class="asset-calc-card">
+                        <div class="title">📜 채권</div>
+                        <div class="detail">투자: <span id="t4_inv_bnd">-</span></div>
+                        <div class="detail">수익률: <span id="t4_rate_bnd">-</span></div>
+                        <div class="val">최종: <span id="t4_res_bnd">-</span></div>
+                    </div>
                 </div>
             </div>
 
-            <button class="btn-complete" id="t4_btn" onclick="completeTurn(4)">✅ 4턴 완료 ➔ 결과 확인</button>
-            <div class="turn-result" id="t4_result" style="display:none;"></div>
+            <!-- STEP 4: 최종 완료 -->
+            <div class="step" id="t4_step4">
+                <div class="step-head"><span class="step-label">STEP 4</span> 최종 완료 <span class="step-status" id="t4_status4"></span></div>
+                <button class="btn-complete" id="t4_btn_final" onclick="completeTurn(4)">🏁 4턴 최종 완료 (이월 자금 확인)</button>
+                <div class="turn-result" id="t4_result" style="display:none;"></div>
+            </div>
         </div>
     </div>
 
@@ -495,109 +613,142 @@
 </div>
 
 <script>
-const presets = {
-    rate:   { dep: 5, stk: -20, bnd: -10 },
-    recess: { dep: 1, stk: -10, bnd: 15 },
-    tech:   { dep: 2, stk: 40,  bnd: -5 },
-    crisis: { dep: 2, stk: -40, bnd: 5 },
-    gold:   { dep: 3, stk: 15,  bnd: 5 }
+// 교사 시나리오: 번호(1~5)로만 고르고, 고른 뒤에 내용과 수익률이 공개됨
+const scenarios = {
+    1: { name: '🔴 기준금리 인상', dep: 5, stk: -20, bnd: -10 },
+    2: { name: '🔵 기준금리 인하', dep: 1, stk: -10, bnd: 15 },
+    3: { name: '🟡 기술 혁신',     dep: 2, stk: 40,  bnd: -5 },
+    4: { name: '🟣 금융 위기',     dep: 2, stk: -40, bnd: 5 },
+    5: { name: '🟢 골디락스',      dep: 3, stk: 15,  bnd: 5 }
 };
+const ASSETS = [['dep', '🏦 예금'], ['stk', '📈 주식'], ['bnd', '📜 채권']];
 
 // 턴별 기본 설정 (금액 단위: 만 원 / income·expense는 월 기준, 10년 잉여 자금 = (월 소득 - 월 생활비) × 120개월)
 const config = {
-    1: { name: "1턴 (25~34세)", income: 350, expense: 200, req: 8000 },   // 기본 잉여 18,000
-    2: { name: "2턴 (35~44세)", income: 500, expense: 250, req: 6000 },   // 기본 잉여 30,000
-    3: { name: "3턴 (45~54세)", income: 650, expense: 350, req: 10000 },  // 기본 잉여 36,000
-    4: { name: "4턴 (55~64세)", income: 450, expense: 350, req: 6000 }    // 기본 잉여 12,000
+    1: { name: "1턴 (25~34세)", startAge: 25, income: 350, expense: 200, req: 8000, reqLabel: '결혼 및 전세 보증금' },   // 기본 잉여 18,000
+    2: { name: "2턴 (35~44세)", startAge: 35, income: 500, expense: 250, req: 6000, reqLabel: '출산 및 영유아/초등 양육비' },   // 기본 잉여 30,000
+    3: { name: "3턴 (45~54세)", startAge: 45, income: 650, expense: 350, req: 10000, reqLabel: '중·고등·대학 등록금/사교육' },  // 기본 잉여 36,000
+    4: { name: "4턴 (55~64세)", startAge: 55, income: 450, expense: 350, req: 6000, reqLabel: '노후 의료비 및 간병비' }    // 기본 잉여 12,000
 };
 
 const SEED_MONEY = 10000;        // 초기 자본 1억 (10,000만 원)
 const SALARY_APPLY_MONTHS = 60;  // 연봉 변화는 이번 턴 후반 5년간 적용 후, 다음 턴부터 기본 연봉에 반영
 
+// 가정 형태 (1턴에서 택1, 3턴까지 유지): 1턴은 30세 결혼 후 5년, 2·3턴은 10년간 적용하고 매 턴 종료 시 정산
+// 배우자 연봉 = 그 턴 나이대의 기본 연봉 / 육아비 = 맞벌이는 배우자 소득의 90%, 외벌이는 그 턴 본인 연봉의 10%
+const HOUSEHOLD_YEARS = { 1: 5, 2: 10, 3: 10 };
+const household = {
+    dual: { icon: '👫', title: '맞벌이', dualIncome: true, childcareRate: 90, childcareBase: '배우자 소득의',
+        hint: '30세에 결혼해 부부가 함께 돈을 법니다. 아이는 어린이집·돌봄 서비스에 맡깁니다. (부업 불가)',
+        resultDesc: '부부가 함께 벌어 가구 소득이 늘었습니다. 대신 배우자 소득의 90%가 육아비로 나갔습니다.' },
+    single: { icon: '🏡', title: '외벌이', dualIncome: false, childcareRate: 10, childcareBase: '연봉의',
+        hint: '30세에 결혼해 한 사람만 돈을 벌고, 배우자가 집에서 아이를 돌봅니다. 남는 시간에 부업을 할 수 있습니다.',
+        resultDesc: '연봉은 그대로였지만, 배우자가 아이를 돌봐 육아비는 연봉의 10%만 나갔습니다.' }
+};
+
+// 운 요소 (🎲 표시 선택지): 거는 돈(만 원)을 정해서 도전
+// - 5,000~15,000, 1,000 단위 / 기준 10,000(1억)일 때 성공 50%
+// - 1,000만 원 올릴 때마다 성공 확률 +5%p, 내릴 때마다 실패 확률 +5%p (확률은 화면에 표시하지 않음)
+// - 금전 결과 = 1억 기준 금액 × (거는 돈 / 1억), 성공하면 최소 건 돈만큼은 벌게 보장 / 연봉 효과는 그대로
+const STAKE = { min: 5000, max: 15000, step: 1000, base: 10000, baseRate: 50, ratePerStep: 5 };
+const successRate = stake => STAKE.baseRate + (stake - STAKE.base) / STAKE.step * STAKE.ratePerStep;
+const validStake = stake => Number.isInteger(stake) && stake >= STAKE.min && stake <= STAKE.max && stake % STAKE.step === 0;
+
+// 부업 (외벌이 전용, 1~3턴, 운 요소)
+// 성공 = 그 턴 연봉 × 가정 형태 적용 기간 × 45% / 실패 = 1,000만~1억 원 사이 무작위 손실 (둘 다 1억 기준)
+const sideJob = {
+    icon: '💻', title: '부업 (외벌이 전용)', hint: '남는 시간을 활용해 부업으로 부수입을 노립니다.',
+    sideJob: true, requires: 'single',
+    reqText: {
+        ok: '✅ 외벌이를 선택해서 부업을 할 수 있습니다.',
+        blocked: '⛔ 맞벌이를 선택했으므로 부업을 할 수 없습니다.',
+        pending: '👆 외벌이를 선택하면 부업을 할 수 있습니다.'
+    },
+    luck: {
+        success: { desc: '부업이 대박 났습니다! 온라인 스토어가 입소문을 탔습니다.', rate: 45 },
+        fail: { desc: '부업이 실패해 재고·장비·투자금을 날렸습니다.', lossMin: 1000, lossMax: 10000 }
+    }
+};
+
 // 턴별 선택 사항 (수정사항: 선택지 2~3개로 확장 & 결과 비공개)
-// 턴 완료 시 outcomes 중 하나가 확률(prob, %)에 따라 정해짐
+// luck: 운 요소 (성공/실패, 금액은 1억 기준) / outcomes: 정해진 결과 / child: 둘째 출산 규칙
 // cash: 턴 종료 시 정산되는 금액 (만 원) / salary: 연봉 변화율 (%)
 const choices = {
     1: [
         { icon: '🎓', title: '대학원 진학·전문 자격증 취득', hint: '학비와 시간이 들지만, 몸값이 달라질 수도 있습니다.',
-          outcomes: [
-            { prob: 50, desc: '취득 성공! 전문성을 인정받아 연봉 협상에 성공했습니다.', cash: -3000, salary: 12 },
-            { prob: 30, desc: '취득은 했지만 회사에서 크게 인정해 주지 않았습니다.', cash: -3000, salary: 4 },
-            { prob: 20, desc: '업무와 병행하다 중도 포기… 학비만 날렸습니다.', cash: -2000, salary: 0 }
-          ] },
+          luck: {
+            success: { desc: '취득 성공! 전문성을 인정받아 연봉 협상에 성공했습니다.', cash: -3000, salary: 5 },
+            fail: { desc: '업무와 병행하다 중도 포기… 학비만 날렸습니다.', cash: -2000, salary: 0 }
+          } },
         { icon: '🚗', title: '신차 구입', hint: '출퇴근과 생활이 편해지고 활동 반경이 넓어집니다.',
-          outcomes: [
-            { prob: 60, desc: '무사고로 잘 탔지만 차값은 꾸준히 떨어졌습니다. (감가상각·유지비)', cash: -3000, salary: 0 },
-            { prob: 25, desc: '외근·영업에 차를 적극 활용해 실적이 올랐습니다.', cash: -3000, salary: 5 },
-            { prob: 15, desc: '접촉 사고 발생! 수리비에 보험료 할증까지 겹쳤습니다.', cash: -4500, salary: 0 }
-          ] },
+          luck: {
+            success: { desc: '외근·영업에 차를 적극 활용해 실적이 올랐습니다.', cash: -3000, salary: 2 },
+            fail: { desc: '접촉 사고 발생! 수리비에 보험료 할증까지 겹쳤습니다.', cash: -4500, salary: 0 }
+          } },
         { icon: '🚀', title: '스타트업 이직', hint: '안정성은 낮지만, 회사가 성장한다면 기회가 클 수도 있습니다.',
-          outcomes: [
-            { prob: 20, desc: '회사가 상장(IPO)했습니다! 스톡옵션 대박이 났습니다.', cash: 8000, salary: 20 },
-            { prob: 40, desc: '회사가 꾸준히 성장해 연봉이 조금 올랐습니다.', cash: 0, salary: 5 },
-            { prob: 40, desc: '회사가 폐업… 재취업까지 소득 공백이 생기고 연봉도 깎였습니다.', cash: -3000, salary: -10 }
-          ] }
+          luck: {
+            success: { desc: '성공! 회사가 상장(IPO)해 스톡옵션 대박이 났습니다.', cash: 8000, salary: 20 },
+            fail: { desc: '실패… 회사가 폐업해 재취업까지 소득 공백이 생기고 연봉도 깎였습니다.', cash: -3000, salary: -10 }
+          } },
+        sideJob
     ],
     2: [
         { icon: '🏠', title: '내집 마련 (주택담보대출 활용)', hint: '전세살이를 끝내고 내 집을 삽니다. 집값과 금리가 관건입니다.',
-          outcomes: [
-            { prob: 40, desc: '집값이 크게 올라 시세 차익이 생겼습니다!', cash: 10000, salary: 0 },
-            { prob: 35, desc: '집값은 제자리, 대출 이자만 꾸준히 나갔습니다.', cash: -3000, salary: 0 },
-            { prob: 25, desc: '금리 급등에 집값까지 하락… 이자 부담이 커졌습니다.', cash: -9000, salary: 0 }
-          ] },
+          luck: {
+            success: { desc: '집값이 크게 올라 시세 차익이 생겼습니다!', cash: 10000, salary: 0 },
+            fail: { desc: '금리 급등에 집값까지 하락… 이자 부담이 커졌습니다.', cash: -9000, salary: 0 }
+          } },
         { icon: '💼', title: '승진 도전 (야근·사내 MBA)', hint: '회사에 모든 것을 걸어 봅니다. 대신 건강과 가족 시간은 줄어듭니다.',
-          outcomes: [
-            { prob: 50, desc: '팀장 승진 성공! 연봉이 크게 올랐습니다.', cash: -500, salary: 15 },
-            { prob: 30, desc: '승진은 미끄러졌지만 성과급을 조금 받았습니다.', cash: 500, salary: 3 },
-            { prob: 20, desc: '과로로 번아웃… 병원비가 들고 휴직으로 연봉이 줄었습니다.', cash: -2500, salary: -5 }
-          ] },
+          luck: {
+            success: { desc: '팀장 승진 성공! 연봉이 크게 올랐습니다.', cash: -500, salary: 15 },
+            fail: { desc: '과로로 번아웃… 병원비가 들고 휴직으로 연봉이 줄었습니다.', cash: -2500, salary: -5 }
+          } },
         { icon: '🪙', title: '지인 추천 고수익 투자 (코인·비상장주)', hint: '"이번엔 진짜야, 몇 배는 오른대!" 친한 친구의 권유입니다.',
-          outcomes: [
-            { prob: 15, desc: '대박! 투자금이 몇 배로 불어났습니다.', cash: 10000, salary: 0 },
-            { prob: 25, desc: '약간의 수익을 내고 빠져나왔습니다.', cash: 1500, salary: 0 },
-            { prob: 35, desc: '가격이 반토막 났습니다.', cash: -4000, salary: 0 },
-            { prob: 25, desc: '알고 보니 투자 사기였습니다… 원금을 모두 잃었습니다.', cash: -8000, salary: 0 }
-          ] }
+          luck: {
+            success: { desc: '대박! 투자금이 몇 배로 불어났습니다.', cash: 10000, salary: 0 },
+            fail: { desc: '알고 보니 투자 사기였습니다… 원금을 모두 잃었습니다.', cash: -8000, salary: 0 }
+          } },
+        // 둘째 출산: 확률 없이 규칙대로 정산 (육아비 = 그 턴 연봉 × 10년 × 10%, 국가 지원금 = 육아비의 110%)
+        { icon: '👶', title: '둘째 출산 (한 명 더 낳기)', hint: '가족이 한 명 늘어납니다. 육아비와 함께 국가 지원금도 정산됩니다.',
+          child: { years: 10, costRate: 10, subsidyRate: 110 } },
+        sideJob
     ],
     3: [
         { icon: '👵', title: '부모 부양 및 의료비 지원', hint: '연로하신 부모님의 생활비와 병원비를 지원합니다.',
-          outcomes: [
-            { prob: 50, desc: '부모님이 건강을 회복하셔서 생활비 위주로 지원했습니다.', cash: -3000, salary: 0 },
-            { prob: 35, desc: '장기 입원과 간병으로 의료비가 크게 늘었습니다.', cash: -6000, salary: 0 },
-            { prob: 15, desc: '고마워하신 부모님이 시골 땅을 증여해 주셨습니다.', cash: 3000, salary: 0 }
-          ] },
-        { icon: '🏪', title: '부업으로 프랜차이즈 가게 창업', hint: '퇴직 후를 대비해 미리 가게를 차려 봅니다.',
-          outcomes: [
-            { prob: 25, desc: '동네 맛집으로 소문났습니다! 쏠쏠한 부수입이 생겼습니다.', cash: 9000, salary: 0 },
-            { prob: 35, desc: '근근이 운영했지만 투자금 일부만 회수했습니다.', cash: -1500, salary: 0 },
-            { prob: 40, desc: '경기 침체로 폐업… 권리금과 인테리어 비용을 날렸습니다.', cash: -7000, salary: 0 }
-          ] },
-        { icon: '🎯', title: '임원 승진 도전 (성과 연봉제 계약)', hint: '성과에 따라 연봉이 정해지는 계약입니다. 기회와 위험이 공존합니다.',
-          outcomes: [
-            { prob: 30, desc: '임원 승진! 연봉이 크게 뛰었습니다.', cash: 1000, salary: 25 },
-            { prob: 40, desc: '목표를 달성해 연봉이 소폭 올랐습니다.', cash: 0, salary: 8 },
-            { prob: 30, desc: '목표 미달로 구조조정 대상이 되어 연봉이 깎였습니다. (위로금 지급)', cash: 2000, salary: -15 }
-          ] }
+          luck: {
+            success: { desc: '고마워하신 부모님이 시골 땅을 증여해 주셨습니다.', cash: 3000, salary: 0 },
+            fail: { desc: '장기 입원과 간병으로 의료비가 크게 늘었습니다.', cash: -6000, salary: 0 }
+          } },
+        { icon: '🏪', title: '퇴직 대비 프랜차이즈 가게 창업', hint: '퇴직 후를 대비해 미리 가게를 차려 봅니다.',
+          luck: {
+            success: { desc: '동네 맛집으로 소문났습니다! 쏠쏠한 부수입이 생겼습니다.', cash: 9000, salary: 0 },
+            fail: { desc: '경기 침체로 폐업… 권리금과 인테리어 비용을 날렸습니다.', cash: -7000, salary: 0 }
+          } },
+        // 임원 승진: 성공하면 연봉 +50%지만 임기가 끝나는 52세에 퇴직, 실패하면 50세에 퇴직
+        // 퇴직 후 남은 3턴 기간은 연봉 없음 (4턴은 재취업해 기본 연봉으로 시작)
+        { icon: '🎯', title: '임원 승진 도전', hint: '임원 자리를 놓고 승부합니다. 결과는 운에 달려 있고, 임원은 임기가 짧다는데…',
+          exec: true,
+          luck: {
+            success: { desc: '임원 승진 성공! 연봉이 50% 올랐지만, 임기가 끝나 52세에 퇴직했습니다.', raise: 50, retireAge: 52 },
+            fail: { desc: '임원 승진 실패… 50세에 회사를 떠났습니다.', raise: 0, retireAge: 50 }
+          } },
+        sideJob
     ],
     4: [
-        { icon: '💍', title: '자녀 독립 및 결혼 지원', hint: '자녀의 결혼과 신혼집 마련을 도와줍니다.',
+        // 자녀 지원: 결혼 지원금 5,000만 원은 한 번만 지출, 독립한 자녀가 부모에게 매달 100만 원 × 120개월(12,000만 원)을 보내 줌
+        { icon: '💍', title: '자녀 독립 및 결혼 지원', hint: '자녀의 결혼 자금을 지원하고 독립시킵니다.',
           outcomes: [
-            { prob: 40, desc: '자녀가 소박한 결혼식을 원해 지원금이 적게 들었습니다.', cash: -2500, salary: 0 },
-            { prob: 45, desc: '신혼집 전세자금까지 지원했습니다.', cash: -6000, salary: 0 },
-            { prob: 15, desc: '지원은 했지만 들어온 축의금이 더 많았습니다!', cash: 1000, salary: 0 }
+            { prob: 100, desc: '결혼 지원금 5,000만 원을 한 번 지원했고, 독립한 자녀가 매달 100만 원씩(10년간 +12,000만 원) 용돈을 보내 주었습니다.', cash: 7000, salary: 0 }
           ] },
         { icon: '🔧', title: '정년 연장·재취업 준비 (기술 자격증)', hint: '은퇴 후에도 일할 수 있도록 새로운 기술을 배웁니다.',
           outcomes: [
-            { prob: 45, desc: '기술을 인정받아 정년이 연장되고 연봉도 올랐습니다.', cash: -500, salary: 15 },
-            { prob: 35, desc: '재취업에는 성공했지만 연봉은 다소 줄었습니다.', cash: -500, salary: -5 },
-            { prob: 20, desc: '나이 때문에 재취업에 실패했습니다. 교육비만 들었습니다.', cash: -1000, salary: 0 }
+            { prob: 100, desc: '교육비 5,000만 원을 들여 기술을 익혔고, 정년이 연장되며 연봉이 10% 올랐습니다.', cash: -5000, salary: 10 }
           ] },
-        { icon: '🏢', title: '노후 대비 상가(수익형 부동산) 투자', hint: '월세를 받는 상가에 투자합니다. 좋은 임차인을 구해야 합니다.',
-          outcomes: [
-            { prob: 40, desc: '우량 임차인 입주! 안정적인 월세 수입이 들어왔습니다.', cash: 7000, salary: 0 },
-            { prob: 35, desc: '공실이 길어져 관리비만 나갔습니다.', cash: -2500, salary: 0 },
-            { prob: 25, desc: '상권 침체로 상가 가격이 떨어졌습니다.', cash: -6000, salary: 0 }
-          ] }
+        { icon: '🏢', title: '노후 대비 상가(수익형 부동산) 투자', hint: '월세를 받는 상가에 투자합니다. 결과는 운에 달려 있습니다.',
+          luck: {
+            success: { desc: '우량 임차인 입주! 월세 수입과 시세 차익을 얻었습니다.', cash: 6000, salary: 0 },
+            fail: { desc: '공실과 상권 침체로 상가 가격이 떨어졌습니다.', cash: -6000, salary: 0 }
+          } }
     ]
 };
 
@@ -610,19 +761,87 @@ const pctText = n => (Math.abs(n) < 0.05 ? '0.0' : (n > 0 ? '+' : '') + n.toFixe
 const toneClass = n => n > 0 ? 'up' : (n < 0 ? 'down' : '');
 const readNum = id => parseFloat(document.getElementById(id).value) || 0;
 const setText = (id, text) => { document.getElementById(id).innerText = text; };
+// 만 원 단위 금액을 '1억 2,000만 원' 형태로 표시
+const wonText = n => {
+    const eok = Math.floor(n / 10000), man = n % 10000;
+    return (eok ? `${eok}억` : '') + (man ? `${eok ? ' ' : ''}${fmt(man)}만` : '') + ' 원';
+};
+const readStake = (turn, i) => Number(document.getElementById(`t${turn}_c_${i}_stake`).value);
+
+function updateStake(turn, i) {
+    const stake = readStake(turn, i);
+    const el = document.getElementById(`t${turn}_c_${i}_won`);
+    el.innerText = validStake(stake) ? `= ${wonText(stake)}` : '⚠️ 5,000~15,000 사이, 1,000 단위';
+    el.classList.toggle('down', !validStake(stake));
+}
 
 // 선택 사항 카드 렌더링 (금액·확률은 표시하지 않음)
 function renderChoices(turn) {
     document.getElementById(`t${turn}_choices`).innerHTML = choices[turn].map((c, i) => `
-        <label class="choice-card" for="t${turn}_c_${i}">
-            <input type="checkbox" id="t${turn}_c_${i}" onchange="this.closest('.choice-card').classList.toggle('selected', this.checked)">
-            <div>
-                <div class="c-title">${c.icon} [선택] ${c.title}</div>
-                <div class="c-hint">${c.hint}</div>
-                <div class="c-lock">🔒 금액 · 이익/손실 여부 비공개</div>
-            </div>
-        </label>
+        <div class="choice-card">
+            <label class="choice-main" for="t${turn}_c_${i}">
+                <input type="checkbox" id="t${turn}_c_${i}" onchange="this.closest('.choice-card').classList.toggle('selected', this.checked)">
+                <div>
+                    <div class="c-title">${c.icon} [선택] ${c.title}${c.luck ? ' <span class="c-luck">🎲 운</span>' : ''}</div>
+                    <div class="c-hint">${c.hint}</div>
+                    <div class="c-lock">🔒 금액 · 이익/손실 여부 비공개</div>
+                    ${c.requires ? `<div class="c-req" id="t${turn}_c_${i}_req"></div>` : ''}
+                </div>
+            </label>
+            ${c.luck ? `
+            <div class="c-stake">
+                <div class="c-stake-row">
+                    💰 거는 돈
+                    <input type="number" id="t${turn}_c_${i}_stake" min="${STAKE.min}" max="${STAKE.max}" step="${STAKE.step}" value="${STAKE.base}" oninput="updateStake(${turn}, ${i})"> 만 원
+                    <span class="c-stake-won" id="t${turn}_c_${i}_won">= ${wonText(STAKE.base)}</span>
+                </div>
+                <div class="c-stake-note">5,000만~1억 5,000만 원, 1,000만 원 단위 · 성공하면 건 돈 이상 수익, 실패하면 거는 돈에 비례해 손실</div>
+            </div>` : ''}
+        </div>
     `).join('');
+    updateChoiceAvailability(turn);
+}
+
+// 가정 형태 조건이 있는 선택 사항(부업): 조건이 안 맞으면 안내 문구와 함께 선택 불가
+function updateChoiceAvailability(turn) {
+    const checked = document.querySelector('input[name="t1_household"]:checked');
+    const key = turn === 1 ? (checked && checked.value) : (records[1] && records[1].household.key);
+    choices[turn].forEach((c, i) => {
+        if (!c.requires) return;
+        const ok = key === c.requires;
+        const input = document.getElementById(`t${turn}_c_${i}`);
+        input.disabled = !ok;
+        if (!ok) input.checked = false;
+        const stakeInput = document.getElementById(`t${turn}_c_${i}_stake`);
+        if (stakeInput) stakeInput.disabled = !ok;
+        const card = input.closest('.choice-card');
+        card.classList.toggle('unavailable', !ok);
+        card.classList.toggle('selected', input.checked);
+        setText(`t${turn}_c_${i}_req`, ok ? c.reqText.ok : (key ? c.reqText.blocked : c.reqText.pending));
+    });
+}
+
+// 1턴 가정 형태 카드 렌더링 (택1, 금액은 표시하지 않음)
+function renderHousehold() {
+    document.getElementById('t1_household').innerHTML = Object.entries(household).map(([key, h]) => `
+        <div class="choice-card">
+            <label class="choice-main" for="t1_hh_${key}">
+                <input type="radio" name="t1_household" id="t1_hh_${key}" value="${key}" onchange="syncHousehold()">
+                <div>
+                    <div class="c-title">${h.icon} [필수] ${h.title}</div>
+                    <div class="c-hint">${h.hint}</div>
+                    <div class="c-lock">🔒 금액 · 이익/손실 여부 비공개</div>
+                </div>
+            </label>
+        </div>
+    `).join('');
+}
+
+function syncHousehold() {
+    document.querySelectorAll('#t1_household .choice-card').forEach(card => {
+        card.classList.toggle('selected', card.querySelector('input').checked);
+    });
+    updateChoiceAvailability(1);
 }
 
 // 턴 시작 시점의 이월금과 연봉 배율 (이전 턴 정산 기록 기준)
@@ -645,64 +864,105 @@ function showTurn(turn) {
     if (turn === 5) {
         tab.classList.remove('next-ready');
         renderSummary();
-    } else if (!records[turn]) {
-        calcTurn(turn);
+    } else {
+        refreshTurn(turn);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function applyScenario(turn) {
-    const sc = document.getElementById(`t${turn}_sc`).value;
-    if (presets[sc]) {
-        document.getElementById(`t${turn}_r_dep`).value = presets[sc].dep;
-        document.getElementById(`t${turn}_r_stk`).value = presets[sc].stk;
-        document.getElementById(`t${turn}_r_bnd`).value = presets[sc].bnd;
-    }
-    calcTurn(turn);
-}
+const stageOf = turn => (records[turn] ? records[turn].stage : 0);
 
-// 턴별 투자 정산 미리보기 (선택 사항 결과는 포함하지 않음)
-function calcTurn(turn) {
+// 턴 시작 정보: 이월금, 연봉, 10년 잉여 자금
+function turnBase(turn) {
     const cfg = config[turn];
     const { carry, mult } = turnStart(turn);
-
     const monthly = cfg.income * mult;
-    const salary = Math.round(monthly * 12);
-    const surplus = Math.round((monthly - cfg.expense) * 120);
-    const avail = carry + surplus - cfg.req;
+    return { carry, mult, monthly, salary: Math.round(monthly * 12), surplus: Math.round((monthly - cfg.expense) * 120) };
+}
 
-    if (turn > 1) setText(`t${turn}_prev_txt`, fmt(carry));
-    setText(`t${turn}_salary_txt`, fmt(salary));
-    const multPct = (mult - 1) * 100;
+// 턴 화면 갱신: 상단 정보, 가정 형태 안내, 단계 잠금, 자산 배분 표시
+function refreshTurn(turn) {
+    const cfg = config[turn];
+    const b = turnBase(turn);
+    if (turn > 1) setText(`t${turn}_prev_txt`, fmt(b.carry));
+    setText(`t${turn}_salary_txt`, fmt(b.salary));
+    const multPct = (b.mult - 1) * 100;
     document.getElementById(`t${turn}_salary_diff`).innerHTML = Math.abs(multPct) >= 0.05
         ? ` <span class="${toneClass(multPct)}">(지난 선택 효과 ${pctText(multPct)})</span>` : '';
-    setText(`t${turn}_surplus_txt`, signed(surplus));
-    setText(`t${turn}_surplus_detail`, `(월 ${fmt(monthly)}만 - 월 ${fmt(cfg.expense)}만)`);
+    setText(`t${turn}_surplus_txt`, signed(b.surplus));
+    setText(`t${turn}_surplus_detail`, `(월 ${fmt(b.monthly)}만 - 월 ${fmt(cfg.expense)}만)`);
+
+    const hhNote = document.getElementById(`t${turn}_household_note`);
+    if (hhNote) {
+        const hh = records[1] && records[1].household;
+        hhNote.innerHTML = hh ? `${hh.icon} 가정 형태: <strong>${hh.title}</strong> 유지 중 (1턴에서 선택, 3턴까지)${hh.key === sideJob.requires ? ' · 💻 부업 가능' : ' · 부업 불가'} — 가정 형태에 따른 소득·육아비는 선택 완료 시 정산됩니다.` : '';
+    }
+
+    updateStepUI(turn);
+    previewAllocation(turn);
+}
+
+const readAllocation = turn => ({ dep: readNum(`t${turn}_p_dep`), stk: readNum(`t${turn}_p_stk`), bnd: readNum(`t${turn}_p_bnd`) });
+const validAllocation = p => Math.abs(p.dep + p.stk + p.bnd - 100) < 1e-9 && Math.min(p.dep, p.stk, p.bnd) >= 0;
+// 여유 자금이 마이너스면 투자 없이 부채로 이월
+const investAmounts = (avail, p) => {
+    const investable = Math.max(avail, 0);
+    return { dep: Math.round(investable * p.dep / 100), stk: Math.round(investable * p.stk / 100), bnd: Math.round(investable * p.bnd / 100) };
+};
+
+// 투자 가능 여유 자금과 자산별 투자·정산 금액 표시 (시나리오 공개 전에는 수익률·최종 금액 비공개)
+function previewAllocation(turn) {
+    const rec = records[turn];
+    const p = rec && rec.p ? rec.p : readAllocation(turn);
+    document.getElementById(`t${turn}_warn`).style.display = validAllocation(p) ? 'none' : 'block';
 
     const availEl = document.getElementById(`t${turn}_avail`);
-    availEl.innerText = fmt(avail);
-    availEl.style.color = avail < 0 ? 'var(--danger)' : '#2563eb';
-    document.getElementById(`t${turn}_debt`).style.display = avail < 0 ? 'block' : 'none';
+    availEl.innerText = rec ? fmt(rec.avail) : 'STEP 1 완료 후 계산';
+    availEl.style.color = rec && rec.avail < 0 ? 'var(--danger)' : '#2563eb';
+    document.getElementById(`t${turn}_debt`).style.display = rec && rec.avail < 0 ? 'block' : 'none';
 
-    // 비율 검증
-    const p = { dep: readNum(`t${turn}_p_dep`), stk: readNum(`t${turn}_p_stk`), bnd: readNum(`t${turn}_p_bnd`) };
-    const valid = Math.abs(p.dep + p.stk + p.bnd - 100) < 1e-9 && Math.min(p.dep, p.stk, p.bnd) >= 0;
-    document.getElementById(`t${turn}_warn`).style.display = valid ? 'none' : 'block';
-
-    // 수익률 및 자산별 세부 금액 계산 (여유 자금이 마이너스면 투자 없이 부채로 이월)
-    const r = { dep: readNum(`t${turn}_r_dep`), stk: readNum(`t${turn}_r_stk`), bnd: readNum(`t${turn}_r_bnd`) };
-    const investable = Math.max(avail, 0);
-    const debt = Math.min(avail, 0);
-    const inv = {}, res = {};
-    ['dep', 'stk', 'bnd'].forEach(k => {
-        inv[k] = Math.round(investable * (p[k] / 100));
-        res[k] = Math.round(inv[k] * (1 + r[k] / 100));
-        setText(`t${turn}_inv_${k}`, fmt(inv[k]));
-        setText(`t${turn}_res_${k}`, fmt(res[k]));
+    const inv = rec ? investAmounts(rec.avail, p) : null;
+    setText(`t${turn}_alloc_preview`, inv && validAllocation(p)
+        ? `→ 예금 ${fmt(inv.dep)}만 · 주식 ${fmt(inv.stk)}만 · 채권 ${fmt(inv.bnd)}만 원 투자` : '');
+    ASSETS.forEach(([k]) => {
+        setText(`t${turn}_inv_${k}`, inv ? `${fmt(inv[k])}만 원` : 'STEP 1 완료 후');
+        setText(`t${turn}_rate_${k}`, rec && rec.r ? `${rec.r[k] > 0 ? '+' : ''}${rec.r[k]}%` : '시나리오 공개 후');
+        setText(`t${turn}_res_${k}`, rec && rec.res ? `${fmt(rec.res[k])}만 원` : '시나리오 공개 후');
     });
+}
 
-    const investFinal = res.dep + res.stk + res.bnd + debt;
-    return { carry, mult, monthly, salary, surplus, avail, debt, p, r, inv, res, investFinal, valid };
+// 단계 잠금: 앞 단계를 끝내야 다음 단계가 열리고, 끝낸 단계는 되돌릴 수 없음
+// stage 0: 선택 중 / 1: 선택 완료 / 2: 배분 확정 / 3: 시나리오 선택(최종 완료 전까지 변경 가능) / 4: 최종 완료
+function updateStepUI(turn) {
+    const stage = stageOf(turn);
+    const states = {
+        1: stage >= 1 ? 'done' : 'active',
+        2: stage >= 2 ? 'done' : (stage === 1 ? 'active' : 'locked'),
+        3: stage >= 4 ? 'done' : (stage >= 2 ? 'active' : 'locked'),
+        4: stage >= 4 ? 'done' : (stage === 3 ? 'active' : 'locked')
+    };
+    const statusText = { done: '✅ 완료 (변경 불가)', active: '✏️ 진행 중', locked: '🔒 앞 단계를 먼저 완료하세요' };
+    for (let n = 1; n <= 4; n++) {
+        const step = document.getElementById(`t${turn}_step${n}`);
+        step.classList.remove('done', 'active', 'locked');
+        step.classList.add(states[n]);
+        setText(`t${turn}_status${n}`, statusText[states[n]]);
+    }
+
+    document.querySelectorAll(`#t${turn}_step1 input:not([data-fixed])`).forEach(el => el.disabled = stage >= 1);
+    if (stage === 0) updateChoiceAvailability(turn);
+    ASSETS.forEach(([k]) => { document.getElementById(`t${turn}_p_${k}`).disabled = stage !== 1; });
+    document.getElementById(`t${turn}_sc`).disabled = stage < 2 || stage >= 4;
+
+    [
+        [`t${turn}_btn_choice`, stage === 0, stage >= 1 ? '✔ 선택 완료됨 (변경 불가)' : '✅ 선택 완료 (결과 확인)'],
+        [`t${turn}_btn_alloc`, stage === 1, stage >= 2 ? '✔ 자산 배분 확정됨 (변경 불가)' : '🔒 자산 배분 확정'],
+        [`t${turn}_btn_final`, stage === 3, stage >= 4 ? `✔ ${turn}턴 최종 완료됨` : `🏁 ${turn}턴 최종 완료 (이월 자금 확인)`]
+    ].forEach(([id, enabled, label]) => {
+        const btn = document.getElementById(id);
+        btn.disabled = !enabled;
+        btn.innerText = label;
+    });
 }
 
 function pickOutcome(outcomes) {
@@ -715,38 +975,177 @@ function pickOutcome(outcomes) {
     return outcomes[outcomes.length - 1];
 }
 
-// 완료 버튼 처리: 선택 결과 공개 + 정산 후 상단 탭으로 다음 턴 이동 안내 (수정사항 다)
-function completeTurn(turn) {
-    if (records[turn]) return;
+// 둘째 출산 정산: 육아비 = 그 턴 연봉 × 기간 × costRate%, 국가 지원금 = 육아비 × subsidyRate%
+function childOutcome(spec, salary) {
+    const cost = Math.round(salary * spec.years * spec.costRate / 100);
+    const subsidy = Math.round(cost * spec.subsidyRate / 100);
+    return {
+        desc: `둘째가 태어났습니다! 육아비(연봉의 ${spec.costRate}% × ${spec.years}년) ${signed(-cost)}만 원이 들었지만, 
+            국가 지원으로 육아비의 ${spec.subsidyRate}%인 ${signed(subsidy)}만 원을 받았습니다.`,
+        cash: subsidy - cost,
+        salary: 0
+    };
+}
 
-    const calc = calcTurn(turn);
-    if (!calc.valid) {
-        alert("자산 배분 비율은 0 이상이고, 합이 100%가 되어야 합니다!");
+// 임원 승진 정산: 퇴직 전까지 연봉 인상분을 받고, 퇴직 후 남은 턴 기간의 연봉은 받지 못함
+// (퇴직으로 끝나므로 다음 턴 연봉 배율에는 반영하지 않음)
+function execOutcome(o, salary, turn) {
+    const workYears = o.retireAge - config[turn].startAge;
+    const lostYears = 10 - workYears;
+    const raisedSalary = Math.round(salary * (1 + o.raise / 100));
+    const raiseIncome = Math.round(salary * o.raise / 100 * workYears);
+    const lostIncome = Math.round(salary * lostYears);
+    return {
+        desc: `${o.desc} (${o.raise ? `${o.retireAge}세까지 ${workYears}년 연봉 인상분 ${signed(raiseIncome)}만 원 / ` : ''}퇴직 후 ${lostYears}년 연봉 없음 ${signed(-lostIncome)}만 원, 1억 기준)`,
+        cash: raiseIncome - lostIncome,
+        salary: 0,
+        salaryText: (o.raise ? `+${o.raise}%, ` : '') + `${o.retireAge}세 퇴직`,
+        salaryTone: o.raise ? 1 : -1,
+        salaryLine: o.raise
+            ? `🎯 임원 승진: ${o.retireAge}세 퇴직까지 ${workYears}년간 연봉 <strong class="up">${fmt(raisedSalary)}만 원</strong> (+${o.raise}%), 퇴직 후 ${lostYears}년은 연봉 없음`
+            : `🎯 임원 승진 실패: ${o.retireAge}세에 퇴직해 남은 ${lostYears}년은 연봉 없음`,
+        retireAge: o.retireAge,
+        raise: o.raise,
+        raisedSalary
+    };
+}
+
+// 부업 정산 (1억 기준): 성공은 연봉 비례 수익, 실패는 무작위 손실
+function sideJobOutcome(o, salary, turn) {
+    if (o.lossMax) {
+        const loss = o.lossMin + Math.round(Math.random() * (o.lossMax - o.lossMin) / 100) * 100;
+        return { desc: `${o.desc} (1억 기준 최대 ${fmt(o.lossMax)}만 원 손실)`, cash: -loss, salary: 0 };
+    }
+    const years = HOUSEHOLD_YEARS[turn];
+    return { desc: `${o.desc} (1억 기준 연봉의 ${o.rate}% × ${years}년)`, cash: Math.round(salary * years * o.rate / 100), salary: 0 };
+}
+
+// 선택 사항 결과 결정
+// - 운 요소(luck): 거는 돈으로 성공 확률을 정해 추첨, 금전 결과 = 1억 기준 금액 × (거는 돈 / 1억), 성공 시 최소 건 돈 보장
+// - 둘째 출산: 규칙 계산 / 나머지: 정해진 결과
+function resolveOutcome(choice, salary, turn, stake) {
+    if (choice.child) return childOutcome(choice.child, salary);
+    if (!choice.luck) return pickOutcome(choice.outcomes);
+
+    const success = Math.random() * 100 < successRate(stake);
+    const o = success ? choice.luck.success : choice.luck.fail;
+    const base = choice.exec ? execOutcome(o, salary, turn) : (choice.sideJob ? sideJobOutcome(o, salary, turn) : { ...o });
+    const scale = stake / STAKE.base;
+    const scaledCash = Math.round(base.cash * scale);
+    const cash = success ? Math.max(scaledCash, stake) : scaledCash;
+    return { ...base, cash, luck: { stake, success, baseCash: base.cash, scale, scaledCash, guaranteed: cash !== scaledCash } };
+}
+
+// 운 요소 결과 설명 (확률은 표시하지 않음)
+function luckLine(outcome) {
+    const l = outcome.luck;
+    let text = `🎲 ${wonText(l.stake)} 걸고 <strong class="${l.success ? 'up' : 'down'}">${l.success ? '성공' : '실패'}</strong>`;
+    if (l.guaranteed) return `${text} → 성공 보장(건 돈 이상) <strong class="up">${signed(outcome.cash)}만 원</strong>`;
+    if (l.scale !== 1) text += ` · 1억 기준 ${signed(l.baseCash)}만 × ${+l.scale.toFixed(1)}배 = ${signed(l.scaledCash)}만`;
+    return text;
+}
+
+// STEP 1 선택 완료: 선택 결과(금액·이익/손실 여부)는 이때 처음 정해지고 공개되며, 이후 되돌릴 수 없음
+function completeChoices(turn) {
+    if (stageOf(turn) >= 1) return;
+
+    const hhInput = document.querySelector(`input[name="t${turn}_household"]:checked`);
+    if (turn === 1 && !hhInput) {
+        alert("가정 형태(맞벌이/외벌이) 중 하나를 선택하세요!");
+        return;
+    }
+    // 가정 형태 (1턴에서 선택, 3턴까지 유지)
+    const hhKey = turn === 1 ? hhInput.value : records[1].household.key;
+
+    // 선택 사항 (가정 형태 조건이 맞지 않는 항목은 제외)
+    const selected = choices[turn]
+        .map((choice, i) => ({ choice, i }))
+        .filter(({ choice, i }) => !(choice.requires && choice.requires !== hhKey) && document.getElementById(`t${turn}_c_${i}`).checked);
+    if (selected.some(({ choice, i }) => choice.luck && !validStake(readStake(turn, i)))) {
+        alert("거는 돈은 5,000만~1억 5,000만 원 사이에서 1,000만 원 단위로 입력하세요!");
         return;
     }
 
-    // 선택 사항 결과는 이 시점에 처음 정해지고 공개됨
-    const picks = [];
-    choices[turn].forEach((choice, i) => {
-        if (document.getElementById(`t${turn}_c_${i}`).checked) {
-            picks.push({ choice, outcome: pickOutcome(choice.outcomes) });
-        }
-    });
-
     const cfg = config[turn];
+    const b = turnBase(turn);
+    const picks = selected.map(({ choice, i }) => ({
+        choice,
+        outcome: resolveOutcome(choice, b.salary, turn, choice.luck ? readStake(turn, i) : 0)
+    }));
+
     const choiceCash = picks.reduce((sum, pk) => sum + pk.outcome.cash, 0);
-    const multAfter = picks.reduce((m, pk) => m * (1 + pk.outcome.salary / 100), calc.mult);
+    const multAfter = picks.reduce((m, pk) => m * (1 + pk.outcome.salary / 100), b.mult);
     const monthlyAfter = cfg.income * multAfter;
     const salaryAfter = Math.round(monthlyAfter * 12);
-    const salaryIncomeDelta = Math.round((monthlyAfter - calc.monthly) * SALARY_APPLY_MONTHS);
-    const final = calc.investFinal + choiceCash + salaryIncomeDelta;
+    const salaryIncomeDelta = Math.round((monthlyAfter - b.monthly) * SALARY_APPLY_MONTHS);
 
-    records[turn] = { ...calc, picks, choiceCash, multAfter, salaryAfter, salaryIncomeDelta, final };
+    // 가정 형태 정산: 맞벌이는 배우자 소득 추가, 육아비는 기준 금액의 일정 비율
+    const hhYears = HOUSEHOLD_YEARS[turn];
+    let hh = null;
+    if (hhYears) {
+        const def = household[hhKey];
+        const spouseSalary = def.dualIncome ? cfg.income * 12 : 0;
+        const spouseIncome = Math.round(spouseSalary * hhYears);
+        const childcare = Math.round((def.dualIncome ? spouseIncome : b.salary * hhYears) * def.childcareRate / 100);
+        hh = { ...def, key: hhKey, years: hhYears, spouseSalary, spouseIncome, childcare, net: spouseIncome - childcare };
+    }
+    const householdNet = hh ? hh.net : 0;
 
-    lockTurn(turn);
-    renderResult(turn);
+    // 투자 가능 여유 자금 = 이월금 + 10년 잉여 자금 - 필수 지출 ± 가정 형태 ± 선택 결과 ± 연봉 변화 소득
+    const avail = b.carry + b.surplus - cfg.req + householdNet + choiceCash + salaryIncomeDelta;
 
-    // 자동 이동 대신 상단의 다음 턴 탭을 열고 강조
+    records[turn] = { stage: 1, ...b, picks, choiceCash, multAfter, salaryAfter, salaryIncomeDelta, household: hh, householdNet, avail };
+    updateStepUI(turn);
+    previewAllocation(turn);
+    renderChoiceResult(turn);
+}
+
+// STEP 2 자산 배분 확정 (이후 변경 불가)
+function confirmAllocation(turn) {
+    const rec = records[turn];
+    if (!rec || rec.stage !== 1) return;
+    const p = readAllocation(turn);
+    if (!validAllocation(p)) {
+        alert("자산 배분 비율은 0 이상이고, 합이 100%가 되어야 합니다!");
+        return;
+    }
+    Object.assign(rec, { stage: 2, p, inv: investAmounts(rec.avail, p), debt: Math.min(rec.avail, 0) });
+    updateStepUI(turn);
+    previewAllocation(turn);
+}
+
+// STEP 3 시나리오 선택: 번호(1~5)를 고르면 시나리오 내용과 투자 결과 공개 (최종 완료 전까지는 다시 고를 수 있음)
+function applyScenario(turn) {
+    const rec = records[turn];
+    if (!rec || rec.stage < 2 || rec.stage >= 4) return;
+    const no = document.getElementById(`t${turn}_sc`).value;
+    const sc = scenarios[no];
+    const info = document.getElementById(`t${turn}_sc_info`);
+    if (!sc) {
+        Object.assign(rec, { stage: 2, scenarioNo: null, scenario: null, r: null, res: null, investFinal: null });
+        info.innerHTML = '';
+    } else {
+        const r = { dep: sc.dep, stk: sc.stk, bnd: sc.bnd };
+        const res = {};
+        ASSETS.forEach(([k]) => { res[k] = Math.round(rec.inv[k] * (1 + r[k] / 100)); });
+        const investFinal = res.dep + res.stk + res.bnd + rec.debt;
+        Object.assign(rec, { stage: 3, scenarioNo: no, scenario: sc, r, res, investFinal });
+        const rateText = ASSETS.map(([k, label]) => `${label} ${r[k] > 0 ? '+' : ''}${r[k]}%`).join(' · ');
+        info.innerHTML = `<div class="scenario-card reveal">📈 시나리오 ${no}: ${sc.name}<div class="scenario-rates">${rateText}</div></div>`;
+    }
+    updateStepUI(turn);
+    previewAllocation(turn);
+}
+
+// STEP 4 최종 완료: 이월 자금 확정·공개 후 상단의 다음 턴 탭 강조 (자동 이동 없음)
+function completeTurn(turn) {
+    const rec = records[turn];
+    if (!rec || rec.stage !== 3) return;
+    rec.final = rec.investFinal;
+    rec.stage = 4;
+    updateStepUI(turn);
+    renderFinalResult(turn);
+
     const tab = document.getElementById(`tab${turn}`);
     tab.classList.remove('next-ready');
     tab.classList.add('completed');
@@ -758,16 +1157,6 @@ function completeTurn(turn) {
     nextTab.classList.add('next-ready');
 }
 
-function lockTurn(turn) {
-    const page = document.getElementById(`turn${turn}`);
-    page.classList.add('done');
-    page.querySelectorAll('input, select').forEach(el => el.disabled = true);
-
-    const btn = document.getElementById(`t${turn}_btn`);
-    btn.disabled = true;
-    btn.innerText = `✔ ${turn}턴 완료 (결과 확정)`;
-}
-
 function verdict(o) {
     if (o.cash === 0 && o.salary === 0) return { cls: '', text: '변화 없음' };
     if (o.cash >= 0 && o.salary >= 0) return { cls: 'gain', text: '이익' };
@@ -775,32 +1164,41 @@ function verdict(o) {
     return { cls: 'mixed', text: '이익 + 손실' };
 }
 
-// 턴 결과 발표: ① 결과치 → ② 연봉 변화 → ③ 총 이월 자금 순서로 공개
-function renderResult(turn) {
+// STEP 1 결과 발표: ① 선택 결과 → ② 선택에 따른 연봉 변화 → ③ 필수·선택에 따른 금액 변화 설명
+function renderChoiceResult(turn) {
     const rec = records[turn];
     const cfg = config[turn];
-
-    const assets = [['dep', '🏦 예금'], ['stk', '📈 주식'], ['bnd', '📜 채권']];
-    const investRows = assets.map(([k, label]) => {
-        const diff = rec.res[k] - rec.inv[k];
-        return `<tr>
-            <td>${label}</td><td>${rec.p[k]}%</td><td>${fmt(rec.inv[k])}만</td>
-            <td>${rec.r[k] > 0 ? '+' : ''}${rec.r[k]}%</td><td><strong>${fmt(rec.res[k])}만</strong></td>
-            <td class="${toneClass(diff)}">${signed(diff)}만</td>
-        </tr>`;
-    }).join('') + (rec.debt < 0 ? `<tr><td>💳 부채 이월</td><td colspan="4">여유 자금 부족</td><td class="down">${signed(rec.debt)}만</td></tr>` : '');
 
     const pickCards = rec.picks.length ? rec.picks.map(({ choice, outcome }) => {
         const v = verdict(outcome);
         return `<div class="outcome-card ${v.cls}">
             <div class="outcome-head"><span>${choice.icon} ${choice.title}</span><span class="verdict ${v.cls}">${v.text}</span></div>
             <div class="outcome-desc">${outcome.desc}</div>
+            ${outcome.luck ? `<div class="outcome-luck">${luckLine(outcome)}</div>` : ''}
             <div class="outcome-nums">
                 <span>💰 금전: <strong class="${toneClass(outcome.cash)}">${outcome.cash ? signed(outcome.cash) + '만 원' : '변화 없음'}</strong></span>
-                <span>💼 연봉: <strong class="${toneClass(outcome.salary)}">${outcome.salary ? (outcome.salary > 0 ? '+' : '') + outcome.salary + '%' : '변화 없음'}</strong></span>
+                <span>💼 연봉: <strong class="${toneClass(outcome.salaryText ? outcome.salaryTone : outcome.salary)}">${outcome.salaryText || (outcome.salary ? (outcome.salary > 0 ? '+' : '') + outcome.salary + '%' : '변화 없음')}</strong></span>
             </div>
         </div>`;
     }).join('') : '<p class="muted">이번 턴에는 선택한 항목이 없습니다.</p>';
+
+    const hh = rec.household;
+    const hhVerdict = hh ? verdict({ cash: hh.net, salary: 0 }) : null;
+    const householdCard = hh ? `
+        <h5>👨‍👩‍👧 ${turn === 1 ? '가정 형태 결과 공개' : `가정 형태 정산 (${hh.title} 유지 중)`}</h5>
+        <div class="outcome-card ${hhVerdict.cls}">
+            <div class="outcome-head"><span>${hh.icon} ${hh.title}</span><span class="verdict ${hhVerdict.cls}">${hhVerdict.text}</span></div>
+            <div class="outcome-desc">${hh.resultDesc}</div>
+            <div class="outcome-nums">
+                <span>💼 배우자 소득 (${hh.years}년): <strong class="${toneClass(hh.spouseIncome)}">${hh.spouseIncome ? signed(hh.spouseIncome) + '만 원' : '없음'}</strong></span>
+                <span>🍼 육아비 (${hh.childcareBase} ${hh.childcareRate}%${hh.dualIncome ? '' : ` × ${hh.years}년`}): <strong class="down">${signed(-hh.childcare)}만 원</strong></span>
+                <span>💰 순효과: <strong class="${toneClass(hh.net)}">${signed(hh.net)}만 원</strong></span>
+            </div>
+        </div>` : '';
+    const hhUntil = turn === 3 ? '가정 형태 효과는 이번 턴까지' : '3턴까지 유지';
+    const householdLine = !hh ? '' : hh.dualIncome
+        ? `<li>${hh.icon} ${hh.title}: ${hh.years}년간 가구 연봉 <strong class="up">${fmt(rec.salary + hh.spouseSalary)}만 원</strong> (본인 ${fmt(rec.salary)} + 배우자 ${fmt(hh.spouseSalary)}) — ${hhUntil}</li>`
+        : `<li>${hh.icon} ${hh.title}: 가구 연봉은 본인 연봉 <strong>${fmt(rec.salary)}만 원</strong> 그대로입니다. (${hhUntil})</li>`;
 
     const salaryPct = (rec.multAfter / rec.mult - 1) * 100;
     const salaryChanged = Math.abs(salaryPct) >= 0.05;
@@ -815,36 +1213,51 @@ function renderResult(turn) {
     } else {
         nextLine = '은퇴 전 마지막 턴이므로 다음 턴 반영은 없습니다.';
     }
+    // 임원 승진으로 퇴직한 경우: 퇴직까지의 연봉 흐름을 보여 주고, 4턴은 재취업 기본 연봉으로 시작
+    const retire = rec.picks.map(pk => pk.outcome).find(o => o.retireAge);
+    const flowHtml = retire
+        ? `${fmt(rec.salary)}만 원 ➔ ${retire.raise ? `<span class="up">${fmt(retire.raisedSalary)}만 원</span>
+            <span class="up" style="font-size:0.85em;">(+${retire.raise}%)</span> ➔ ` : ''}<span class="down">${retire.retireAge}세 퇴직</span>`
+        : `${fmt(rec.salary)}만 원 ➔ <span class="${toneClass(salaryPct)}">${fmt(rec.salaryAfter)}만 원</span>
+            <span class="${toneClass(salaryPct)}" style="font-size:0.85em;">(${pctText(salaryPct)})</span>`;
+    const pickSalaryLines = rec.picks.filter(pk => pk.outcome.salaryLine).map(pk => `<li>${pk.outcome.salaryLine}</li>`).join('');
+    const salaryStatus = retire
+        ? '4턴(55세~)은 재취업해 다시 기본 연봉을 받는 것으로 봅니다.'
+        : (salaryChanged ? '선택 결과로 연봉이 바뀌었습니다.' : '선택에 따른 연봉 변화가 없습니다.');
     const salaryBody = `
-        <div class="salary-flow">
-            ${fmt(rec.salary)}만 원 ➔ <span class="${toneClass(salaryPct)}">${fmt(rec.salaryAfter)}만 원</span>
-            <span class="${toneClass(salaryPct)}" style="font-size:0.85em;">(${pctText(salaryPct)})</span>
-        </div>
+        <div class="salary-flow">${flowHtml}</div>
         <ul>
-            <li>${salaryChanged ? '선택 결과로 연봉이 바뀌었습니다.' : '선택에 따른 연봉 변화가 없습니다.'}</li>
+            ${householdLine}
+            ${pickSalaryLines}
+            <li>${salaryStatus}</li>
             <li>연봉 변화에 따른 이번 턴 소득 증감 (후반 5년): <strong class="${toneClass(rec.salaryIncomeDelta)}">${signed(rec.salaryIncomeDelta)}만 원</strong></li>
             <li>${nextLine}</li>
         </ul>`;
 
-    const prevLabel = turn === 1 ? '시드머니' : `${turn - 1}턴 이월금`;
-    const totalLabel = turn < 4 ? `${turn + 1}턴으로 이월되는 총 자금` : '64세 은퇴 시점 총 자금';
-    const growth = rec.final - rec.carry;
-    const nextHint = turn < 4
-        ? `👆 화면 위의 <u>[${config[turn + 1].name}]</u> 탭을 눌러 다음 턴으로 넘어가세요!`
-        : '👆 화면 위의 <u>[🏆 최종 결과]</u> 탭을 눌러 최종 리포트를 확인하세요!';
+    // 필수·선택에 따라 금액이 어떻게 바뀌었는지 설명
+    const flowRows = [
+        [turn === 1 ? '💵 시드머니' : `💵 ${turn - 1}턴 이월금`, rec.carry, false],
+        [`💼 10년 잉여 자금 (월 소득 ${fmt(rec.monthly)}만 - 생활비 ${fmt(cfg.expense)}만) × 120개월`, rec.surplus, true],
+        [`📌 [필수] ${cfg.reqLabel}`, -cfg.req, true]
+    ];
+    if (hh) flowRows.push([`${hh.icon} [가정] ${hh.title} (${hh.dualIncome ? `배우자 소득 ${signed(hh.spouseIncome)}만, ` : ''}육아비 ${signed(-hh.childcare)}만)`, hh.net, true]);
+    rec.picks.forEach(({ choice, outcome }) => {
+        flowRows.push([`${choice.icon} [선택] ${choice.title}${outcome.luck ? ` (${outcome.luck.success ? '성공' : '실패'})` : ''}`, outcome.cash, true]);
+    });
+    if (rec.salaryIncomeDelta) flowRows.push(['📈 연봉 변화로 달라진 이번 턴 소득 (후반 5년)', rec.salaryIncomeDelta, true]);
+    const moneyFlow = `
+        <table class="money-flow">
+            ${flowRows.map(([label, amount, isChange]) => `<tr><td>${label}</td><td class="${isChange ? toneClass(amount) : ''}">${isChange ? signed(amount) : fmt(amount)}만 원</td></tr>`).join('')}
+            <tr class="total"><td>= 투자 가능 여유 자금</td><td>${fmt(rec.avail)}만 원</td></tr>
+        </table>
+        ${rec.avail < 0 ? '<p class="warning" style="display:block;">⚠️ 마이너스라서 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>' : ''}`;
 
-    const el = document.getElementById(`t${turn}_result`);
+    const el = document.getElementById(`t${turn}_choice_result`);
     el.innerHTML = `
-        <h3>📢 ${cfg.name} 결과 발표</h3>
+        <h3>📢 ${cfg.name} 선택 결과 발표</h3>
         <div class="result-step reveal" style="animation-delay:0s;">
-            <h4><span class="step-num">1</span>결과치</h4>
-            <h5>📊 투자 정산</h5>
-            <div style="overflow-x:auto;">
-                <table class="result-table">
-                    <thead><tr><th>자산</th><th>비율</th><th>투자</th><th>수익률</th><th>최종</th><th>손익</th></tr></thead>
-                    <tbody>${investRows}</tbody>
-                </table>
-            </div>
+            <h4><span class="step-num">1</span>선택 결과</h4>
+            ${householdCard}
             <h5>🎲 선택 사항 결과 공개</h5>
             ${pickCards}
         </div>
@@ -852,15 +1265,59 @@ function renderResult(turn) {
             <h4><span class="step-num">2</span>선택에 따른 연봉 변화</h4>
             ${salaryBody}
         </div>
-        <div class="result-step total-box reveal" style="animation-delay:1.2s;">
-            <h4><span class="step-num">3</span>${totalLabel}</h4>
+        <div class="result-step reveal" style="animation-delay:1.2s;">
+            <h4><span class="step-num">3</span>필수·선택에 따른 금액 변화</h4>
+            ${moneyFlow}
+        </div>
+        <div class="next-hint reveal" style="animation-delay:1.8s;">👇 아래 STEP 2에서 예금·주식·채권 비율을 정하고 [자산 배분 확정]을 누르세요.</div>
+    `;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// STEP 4 결과 발표: ① 투자 결과 → ② 총 이월 자금
+function renderFinalResult(turn) {
+    const rec = records[turn];
+    const cfg = config[turn];
+
+    const investRows = ASSETS.map(([k, label]) => {
+        const diff = rec.res[k] - rec.inv[k];
+        return `<tr>
+            <td>${label}</td><td>${rec.p[k]}%</td><td>${fmt(rec.inv[k])}만</td>
+            <td>${rec.r[k] > 0 ? '+' : ''}${rec.r[k]}%</td><td><strong>${fmt(rec.res[k])}만</strong></td>
+            <td class="${toneClass(diff)}">${signed(diff)}만</td>
+        </tr>`;
+    }).join('') + (rec.debt < 0 ? `<tr><td>💳 부채 이월</td><td colspan="4">여유 자금 부족</td><td class="down">${signed(rec.debt)}만</td></tr>` : '');
+
+    const prevLabel = turn === 1 ? '시드머니' : `${turn - 1}턴 이월금`;
+    const totalLabel = turn < 4 ? `${turn + 1}턴으로 이월되는 총 자금` : '64세 은퇴 시점 총 자금';
+    const growth = rec.final - rec.carry;
+    const parts = ASSETS.map(([k, label]) => `${label} ${fmt(rec.res[k])}만`).join(' + ') + (rec.debt < 0 ? ` + 부채 ${signed(rec.debt)}만` : '');
+    const nextHint = turn < 4
+        ? `👆 화면 위의 <u>[${config[turn + 1].name}]</u> 탭을 눌러 다음 턴으로 넘어가세요!`
+        : '👆 화면 위의 <u>[🏆 최종 결과]</u> 탭을 눌러 최종 리포트를 확인하세요!';
+
+    const el = document.getElementById(`t${turn}_result`);
+    el.innerHTML = `
+        <h3>🏁 ${cfg.name} 최종 결과</h3>
+        <div class="result-step reveal" style="animation-delay:0s;">
+            <h4><span class="step-num">1</span>투자 결과 (시나리오 ${rec.scenarioNo}: ${rec.scenario.name})</h4>
+            <div style="overflow-x:auto;">
+                <table class="result-table">
+                    <thead><tr><th>자산</th><th>비율</th><th>투자</th><th>수익률</th><th>최종</th><th>손익</th></tr></thead>
+                    <tbody>${investRows}</tbody>
+                </table>
+            </div>
+        </div>
+        <div class="result-step total-box reveal" style="animation-delay:0.6s;">
+            <h4><span class="step-num">2</span>${totalLabel}</h4>
             <div class="total-value">${fmt(rec.final)} 만 원</div>
             <div class="total-diff">${prevLabel} ${fmt(rec.carry)}만 원 대비 <span class="${toneClass(growth)}">${signed(growth)}만 원</span></div>
             <div class="total-breakdown">
-                투자 정산 ${fmt(rec.investFinal)}만 + 선택 손익 ${signed(rec.choiceCash)}만 + 연봉 변화 소득 ${signed(rec.salaryIncomeDelta)}만 = <strong>${fmt(rec.final)}만 원</strong>
+                투자 가능 여유 자금 ${fmt(rec.avail)}만 원 → ${parts} = <strong>${fmt(rec.final)}만 원</strong>
             </div>
         </div>
-        <div class="next-hint reveal" style="animation-delay:1.8s;">${nextHint}</div>
+        <div class="next-hint reveal" style="animation-delay:1.2s;">${nextHint}</div>
     `;
     el.style.display = 'block';
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -874,18 +1331,26 @@ function renderSummary() {
     for (let t = 1; t <= 4; t++) {
         const rec = records[t];
         const assetCell = k => `${rec.p[k]}% / ${rec.r[k] > 0 ? '+' : ''}${rec.r[k]}%<br><strong>${fmt(rec.res[k])}만 원</strong>`;
-        const picks = rec.picks.length ? rec.picks.map(({ choice, outcome }) => {
-            const v = verdict(outcome);
+        const pickLine = (icon, v, detail) =>
+            `<div class="pick-line">${icon} <span class="${v.cls === 'gain' ? 'up' : (v.cls === 'loss' ? 'down' : '')}">${v.text}</span> (${detail})</div>`;
+        const lines = rec.picks.map(({ choice, outcome }) => {
             const parts = [];
             if (outcome.cash) parts.push(`${signed(outcome.cash)}만`);
-            if (outcome.salary) parts.push(`연봉 ${outcome.salary > 0 ? '+' : ''}${outcome.salary}%`);
-            return `<div class="pick-line">${choice.icon} <span class="${v.cls === 'gain' ? 'up' : (v.cls === 'loss' ? 'down' : '')}">${v.text}</span> (${parts.join(' / ') || '변화 없음'})</div>`;
-        }).join('') : '<span style="color:#94a3b8;">선택 없음</span>';
+            if (outcome.salaryText) parts.push(outcome.raise ? `연봉 ${outcome.salaryText}` : outcome.salaryText);
+            else if (outcome.salary) parts.push(`연봉 ${outcome.salary > 0 ? '+' : ''}${outcome.salary}%`);
+            if (outcome.luck) parts.push(`${wonText(outcome.luck.stake).replace(' 원', '')} 걸고 ${outcome.luck.success ? '성공' : '실패'}`);
+            return pickLine(choice.icon, verdict(outcome), parts.join(' / ') || '변화 없음');
+        });
+        if (rec.household) {
+            const hh = rec.household;
+            lines.unshift(pickLine(`${hh.icon} ${hh.title}`, verdict({ cash: hh.net, salary: 0 }), `${signed(hh.net)}만`));
+        }
+        const picks = lines.join('') || '<span style="color:#94a3b8;">선택 없음</span>';
         const salaryPct = (rec.multAfter / rec.mult - 1) * 100;
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><strong>${config[t].name}</strong></td>
+            <td><strong>${config[t].name}</strong><br><span class="sub-note">시나리오 ${rec.scenarioNo} ${rec.scenario.name}</span></td>
             <td>${fmt(rec.salary)} ➔ ${fmt(rec.salaryAfter)}만<br><span class="${toneClass(salaryPct)}">(${pctText(salaryPct)})</span></td>
             <td>${fmt(rec.avail)} 만 원</td>
             <td>${assetCell('dep')}</td>
@@ -907,18 +1372,17 @@ function initGame() {
     records = {};
     for (let t = 1; t <= 4; t++) {
         const page = document.getElementById(`turn${t}`);
-        page.classList.remove('done');
-        page.querySelectorAll('input[type="number"]').forEach(el => { el.value = el.defaultValue; el.disabled = false; });
-        page.querySelectorAll('select').forEach(el => { el.selectedIndex = 0; el.disabled = false; });
+        page.querySelectorAll('input[type="number"]').forEach(el => { el.value = el.defaultValue; });
+        page.querySelectorAll('select').forEach(el => { el.selectedIndex = 0; });
         renderChoices(t);
-
-        const btn = document.getElementById(`t${t}_btn`);
-        btn.disabled = false;
-        btn.innerText = `✅ ${t}턴 완료 ➔ 결과 확인`;
-
-        const result = document.getElementById(`t${t}_result`);
-        result.style.display = 'none';
-        result.innerHTML = '';
+        if (t === 1) renderHousehold();
+        [`t${t}_choice_result`, `t${t}_result`].forEach(id => {
+            const el = document.getElementById(id);
+            el.style.display = 'none';
+            el.innerHTML = '';
+        });
+        document.getElementById(`t${t}_sc_info`).innerHTML = '';
+        updateStepUI(t);
     }
 
     document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
