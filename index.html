@@ -67,23 +67,31 @@
         /* 선택 사항 카드 (결과 비공개) */
         .choice-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 10px 0 6px; }
         .choice-card {
-            display: flex; gap: 10px; align-items: flex-start; margin: 0; padding: 14px;
-            border: 2px solid var(--border); border-radius: 10px; background: #fff;
-            font-weight: normal; cursor: pointer; transition: all 0.2s;
+            display: flex; flex-direction: column; gap: 10px; padding: 14px;
+            border: 2px solid var(--border); border-radius: 10px; background: #fff; transition: all 0.2s;
         }
         .choice-card:hover { border-color: var(--primary); }
         .choice-card.selected { border-color: var(--primary); background: #eff6ff; }
-        .choice-card input { width: 18px; height: 18px; margin: 2px 0 0; flex-shrink: 0; cursor: pointer; }
+        .choice-main { display: flex; gap: 10px; align-items: flex-start; margin: 0; font-weight: normal; cursor: pointer; }
+        .choice-main input { width: 18px; height: 18px; margin: 2px 0 0; flex-shrink: 0; cursor: pointer; }
+        .choice-card .c-luck { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: #fef3c7; color: #92400e; vertical-align: middle; white-space: nowrap; }
+        .c-stake { border-top: 1px dashed var(--border); padding-top: 10px; font-size: 0.88rem; }
+        .c-stake-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-weight: bold; }
+        .c-stake input[type="number"] { width: 90px; padding: 6px 8px; font-size: 0.95rem; }
+        .c-stake-won { color: var(--primary); }
+        .c-stake-won.down { color: var(--danger); }
+        .c-stake-note { margin-top: 6px; color: #64748b; font-size: 0.8rem; line-height: 1.45; }
         .choice-card .c-title { font-weight: bold; margin-bottom: 4px; }
         .choice-card .c-hint { font-size: 0.88rem; color: #64748b; line-height: 1.45; }
         .choice-card .c-lock { margin-top: 8px; font-size: 0.8rem; color: #7c3aed; font-weight: bold; }
         .household-note { background: #f5f3ff; border-left: 4px solid #7c3aed; padding: 10px 14px; margin: 10px 0; border-radius: 4px; font-size: 0.95rem; }
         .household-note:empty { display: none; }
         .choice-card .c-req { margin-top: 6px; font-size: 0.82rem; font-weight: bold; color: var(--success); }
-        .choice-card.unavailable { opacity: 0.6; background: #f1f5f9; cursor: not-allowed; }
+        .choice-card.unavailable { opacity: 0.6; background: #f1f5f9; }
+        .choice-card.unavailable .choice-main { cursor: not-allowed; }
         .choice-card.unavailable:hover { border-color: var(--border); }
         .choice-card.unavailable .c-req { color: var(--danger); }
-        .turn-page.done .choice-card { cursor: default; }
+        .turn-page.done .choice-main { cursor: default; }
         .turn-page.done .choice-card:hover { border-color: var(--border); }
         .turn-page.done .choice-card.selected:hover { border-color: var(--primary); }
 
@@ -121,6 +129,7 @@
         .outcome-card.mixed { border-left-color: var(--accent); background: #fffbeb; }
         .outcome-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: bold; }
         .outcome-desc { margin: 6px 0; color: #334155; font-size: 0.95rem; }
+        .outcome-luck { margin: 0 0 6px; color: #475569; font-size: 0.88rem; }
         .outcome-nums { display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.92rem; }
         .verdict { flex-shrink: 0; padding: 3px 10px; border-radius: 999px; font-size: 0.8rem; color: #fff; background: #94a3b8; }
         .verdict.gain { background: var(--success); }
@@ -201,7 +210,7 @@
             <div class="choice-list" id="t1_household"></div>
 
             <h3>🎲 선택 사항 <span class="badge badge-lock">🔒 결과는 턴 완료 후 공개</span></h3>
-            <p class="sub-note">원하는 항목을 자유롭게 고르세요. 선택 사항의 비용·수익과 연봉 변화는 턴 완료 시 한꺼번에 정산됩니다.</p>
+            <p class="sub-note">원하는 항목을 자유롭게 고르세요. 선택 사항의 비용·수익과 연봉 변화는 턴 완료 시 한꺼번에 정산됩니다. 🎲 표시가 있는 운 선택지는 거는 돈을 정할 수 있습니다.</p>
             <div class="choice-list" id="t1_choices"></div>
 
             <div class="highlight">
@@ -272,7 +281,7 @@
             <div class="household-note" id="t2_household_note"></div>
 
             <h3>🎲 선택 사항 <span class="badge badge-lock">🔒 결과는 턴 완료 후 공개</span></h3>
-            <p class="sub-note">원하는 항목을 자유롭게 고르세요. 선택 사항의 비용·수익과 연봉 변화는 턴 완료 시 한꺼번에 정산됩니다.</p>
+            <p class="sub-note">원하는 항목을 자유롭게 고르세요. 선택 사항의 비용·수익과 연봉 변화는 턴 완료 시 한꺼번에 정산됩니다. 🎲 표시가 있는 운 선택지는 거는 돈을 정할 수 있습니다.</p>
             <div class="choice-list" id="t2_choices"></div>
 
             <div class="highlight">
@@ -343,7 +352,7 @@
             <div class="household-note" id="t3_household_note"></div>
 
             <h3>🎲 선택 사항 <span class="badge badge-lock">🔒 결과는 턴 완료 후 공개</span></h3>
-            <p class="sub-note">원하는 항목을 자유롭게 고르세요. 선택 사항의 비용·수익과 연봉 변화는 턴 완료 시 한꺼번에 정산됩니다.</p>
+            <p class="sub-note">원하는 항목을 자유롭게 고르세요. 선택 사항의 비용·수익과 연봉 변화는 턴 완료 시 한꺼번에 정산됩니다. 🎲 표시가 있는 운 선택지는 거는 돈을 정할 수 있습니다.</p>
             <div class="choice-list" id="t3_choices"></div>
 
             <div class="highlight">
@@ -413,7 +422,7 @@
             </div>
 
             <h3>🎲 선택 사항 <span class="badge badge-lock">🔒 결과는 턴 완료 후 공개</span></h3>
-            <p class="sub-note">원하는 항목을 자유롭게 고르세요. 선택 사항의 비용·수익과 연봉 변화는 턴 완료 시 한꺼번에 정산됩니다.</p>
+            <p class="sub-note">원하는 항목을 자유롭게 고르세요. 선택 사항의 비용·수익과 연봉 변화는 턴 완료 시 한꺼번에 정산됩니다. 🎲 표시가 있는 운 선택지는 거는 돈을 정할 수 있습니다.</p>
             <div class="choice-list" id="t4_choices"></div>
 
             <div class="highlight">
@@ -538,9 +547,16 @@ const household = {
         resultDesc: '연봉은 그대로였지만, 배우자가 아이를 돌봐 육아비는 연봉의 10%만 나갔습니다.' }
 };
 
-// 부업 (외벌이 전용, 1~3턴): 결과는 확률로 정해짐
-// 수익 = 그 턴 연봉 × 가정 형태 적용 기간 × rate% / 실패 시 손실은 lossMin~lossMax(만 원) 사이에서 무작위 (최대 1억)
-// 맞벌이는 안정적, 외벌이 + 부업은 위험이 큼
+// 운 요소 (🎲 표시 선택지): 거는 돈(만 원)을 정해서 도전
+// - 5,000~15,000, 1,000 단위 / 기준 10,000(1억)일 때 성공 50%
+// - 1,000만 원 올릴 때마다 성공 확률 +5%p, 내릴 때마다 실패 확률 +5%p (확률은 화면에 표시하지 않음)
+// - 금전 결과 = 1억 기준 금액 × (거는 돈 / 1억), 성공하면 최소 건 돈만큼은 벌게 보장 / 연봉 효과는 그대로
+const STAKE = { min: 5000, max: 15000, step: 1000, base: 10000, baseRate: 50, ratePerStep: 5 };
+const successRate = stake => STAKE.baseRate + (stake - STAKE.base) / STAKE.step * STAKE.ratePerStep;
+const validStake = stake => Number.isInteger(stake) && stake >= STAKE.min && stake <= STAKE.max && stake % STAKE.step === 0;
+
+// 부업 (외벌이 전용, 1~3턴, 운 요소)
+// 성공 = 그 턴 연봉 × 가정 형태 적용 기간 × 45% / 실패 = 1,000만~1억 원 사이 무작위 손실 (둘 다 1억 기준)
 const sideJob = {
     icon: '💻', title: '부업 (외벌이 전용)', hint: '남는 시간을 활용해 부업으로 부수입을 노립니다.',
     sideJob: true, requires: 'single',
@@ -549,57 +565,50 @@ const sideJob = {
         blocked: '⛔ 맞벌이를 선택했으므로 부업을 할 수 없습니다.',
         pending: '👆 외벌이를 선택하면 부업을 할 수 있습니다.'
     },
-    outcomes: [
-        { prob: 25, desc: '부업이 대박 났습니다! 온라인 스토어가 입소문을 탔습니다.', rate: 45 },
-        { prob: 50, desc: '꾸준히 해서 쏠쏠한 부수입을 올렸습니다.', rate: 20 },
-        { prob: 25, desc: '부업이 실패해 재고·장비·투자금을 날렸습니다.', lossMin: 1000, lossMax: 10000 }
-    ]
+    luck: {
+        success: { desc: '부업이 대박 났습니다! 온라인 스토어가 입소문을 탔습니다.', rate: 45 },
+        fail: { desc: '부업이 실패해 재고·장비·투자금을 날렸습니다.', lossMin: 1000, lossMax: 10000 }
+    }
 };
 
 // 턴별 선택 사항 (수정사항: 선택지 2~3개로 확장 & 결과 비공개)
-// 턴 완료 시 outcomes 중 하나가 확률(prob, %)에 따라 정해짐
+// luck: 운 요소 (성공/실패, 금액은 1억 기준) / outcomes: 정해진 결과 / child: 둘째 출산 규칙
 // cash: 턴 종료 시 정산되는 금액 (만 원) / salary: 연봉 변화율 (%)
 const choices = {
     1: [
         { icon: '🎓', title: '대학원 진학·전문 자격증 취득', hint: '학비와 시간이 들지만, 몸값이 달라질 수도 있습니다.',
-          outcomes: [
-            { prob: 50, desc: '취득 성공! 전문성을 인정받아 연봉 협상에 성공했습니다.', cash: -3000, salary: 5 },
-            { prob: 30, desc: '취득은 했지만 회사의 인정이 기대보다 적어 연봉이 조금만 올랐습니다.', cash: -3000, salary: 4 },
-            { prob: 20, desc: '업무와 병행하다 중도 포기… 학비만 날렸습니다.', cash: -2000, salary: 0 }
-          ] },
+          luck: {
+            success: { desc: '취득 성공! 전문성을 인정받아 연봉 협상에 성공했습니다.', cash: -3000, salary: 5 },
+            fail: { desc: '업무와 병행하다 중도 포기… 학비만 날렸습니다.', cash: -2000, salary: 0 }
+          } },
         { icon: '🚗', title: '신차 구입', hint: '출퇴근과 생활이 편해지고 활동 반경이 넓어집니다.',
-          outcomes: [
-            { prob: 60, desc: '무사고로 잘 탔지만 차값은 꾸준히 떨어졌습니다. (감가상각·유지비)', cash: -3000, salary: 0 },
-            { prob: 25, desc: '외근·영업에 차를 적극 활용해 실적이 올랐습니다.', cash: -3000, salary: 2 },
-            { prob: 15, desc: '접촉 사고 발생! 수리비에 보험료 할증까지 겹쳤습니다.', cash: -4500, salary: 0 }
-          ] },
+          luck: {
+            success: { desc: '외근·영업에 차를 적극 활용해 실적이 올랐습니다.', cash: -3000, salary: 2 },
+            fail: { desc: '접촉 사고 발생! 수리비에 보험료 할증까지 겹쳤습니다.', cash: -4500, salary: 0 }
+          } },
         { icon: '🚀', title: '스타트업 이직', hint: '안정성은 낮지만, 회사가 성장한다면 기회가 클 수도 있습니다.',
-          outcomes: [
-            { prob: 50, desc: '성공! 회사가 상장(IPO)해 스톡옵션 대박이 났습니다.', cash: 8000, salary: 20 },
-            { prob: 50, desc: '실패… 회사가 폐업해 재취업까지 소득 공백이 생기고 연봉도 깎였습니다.', cash: -3000, salary: -10 }
-          ] },
+          luck: {
+            success: { desc: '성공! 회사가 상장(IPO)해 스톡옵션 대박이 났습니다.', cash: 8000, salary: 20 },
+            fail: { desc: '실패… 회사가 폐업해 재취업까지 소득 공백이 생기고 연봉도 깎였습니다.', cash: -3000, salary: -10 }
+          } },
         sideJob
     ],
     2: [
         { icon: '🏠', title: '내집 마련 (주택담보대출 활용)', hint: '전세살이를 끝내고 내 집을 삽니다. 집값과 금리가 관건입니다.',
-          outcomes: [
-            { prob: 40, desc: '집값이 크게 올라 시세 차익이 생겼습니다!', cash: 10000, salary: 0 },
-            { prob: 35, desc: '집값은 제자리, 대출 이자만 꾸준히 나갔습니다.', cash: -3000, salary: 0 },
-            { prob: 25, desc: '금리 급등에 집값까지 하락… 이자 부담이 커졌습니다.', cash: -9000, salary: 0 }
-          ] },
+          luck: {
+            success: { desc: '집값이 크게 올라 시세 차익이 생겼습니다!', cash: 10000, salary: 0 },
+            fail: { desc: '금리 급등에 집값까지 하락… 이자 부담이 커졌습니다.', cash: -9000, salary: 0 }
+          } },
         { icon: '💼', title: '승진 도전 (야근·사내 MBA)', hint: '회사에 모든 것을 걸어 봅니다. 대신 건강과 가족 시간은 줄어듭니다.',
-          outcomes: [
-            { prob: 50, desc: '팀장 승진 성공! 연봉이 크게 올랐습니다.', cash: -500, salary: 15 },
-            { prob: 30, desc: '승진은 미끄러졌지만 성과급을 조금 받았습니다.', cash: 500, salary: 3 },
-            { prob: 20, desc: '과로로 번아웃… 병원비가 들고 휴직으로 연봉이 줄었습니다.', cash: -2500, salary: -5 }
-          ] },
+          luck: {
+            success: { desc: '팀장 승진 성공! 연봉이 크게 올랐습니다.', cash: -500, salary: 15 },
+            fail: { desc: '과로로 번아웃… 병원비가 들고 휴직으로 연봉이 줄었습니다.', cash: -2500, salary: -5 }
+          } },
         { icon: '🪙', title: '지인 추천 고수익 투자 (코인·비상장주)', hint: '"이번엔 진짜야, 몇 배는 오른대!" 친한 친구의 권유입니다.',
-          outcomes: [
-            { prob: 15, desc: '대박! 투자금이 몇 배로 불어났습니다.', cash: 10000, salary: 0 },
-            { prob: 25, desc: '약간의 수익을 내고 빠져나왔습니다.', cash: 1500, salary: 0 },
-            { prob: 35, desc: '가격이 반토막 났습니다.', cash: -4000, salary: 0 },
-            { prob: 25, desc: '알고 보니 투자 사기였습니다… 원금을 모두 잃었습니다.', cash: -8000, salary: 0 }
-          ] },
+          luck: {
+            success: { desc: '대박! 투자금이 몇 배로 불어났습니다.', cash: 10000, salary: 0 },
+            fail: { desc: '알고 보니 투자 사기였습니다… 원금을 모두 잃었습니다.', cash: -8000, salary: 0 }
+          } },
         // 둘째 출산: 확률 없이 규칙대로 정산 (육아비 = 그 턴 연봉 × 10년 × 10%, 국가 지원금 = 육아비의 110%)
         { icon: '👶', title: '둘째 출산 (한 명 더 낳기)', hint: '가족이 한 명 늘어납니다. 육아비와 함께 국가 지원금도 정산됩니다.',
           child: { years: 10, costRate: 10, subsidyRate: 110 } },
@@ -607,25 +616,23 @@ const choices = {
     ],
     3: [
         { icon: '👵', title: '부모 부양 및 의료비 지원', hint: '연로하신 부모님의 생활비와 병원비를 지원합니다.',
-          outcomes: [
-            { prob: 50, desc: '부모님이 건강을 회복하셔서 생활비 위주로 지원했습니다.', cash: -3000, salary: 0 },
-            { prob: 35, desc: '장기 입원과 간병으로 의료비가 크게 늘었습니다.', cash: -6000, salary: 0 },
-            { prob: 15, desc: '고마워하신 부모님이 시골 땅을 증여해 주셨습니다.', cash: 3000, salary: 0 }
-          ] },
+          luck: {
+            success: { desc: '고마워하신 부모님이 시골 땅을 증여해 주셨습니다.', cash: 3000, salary: 0 },
+            fail: { desc: '장기 입원과 간병으로 의료비가 크게 늘었습니다.', cash: -6000, salary: 0 }
+          } },
         { icon: '🏪', title: '퇴직 대비 프랜차이즈 가게 창업', hint: '퇴직 후를 대비해 미리 가게를 차려 봅니다.',
-          outcomes: [
-            { prob: 25, desc: '동네 맛집으로 소문났습니다! 쏠쏠한 부수입이 생겼습니다.', cash: 9000, salary: 0 },
-            { prob: 35, desc: '근근이 운영했지만 투자금 일부만 회수했습니다.', cash: -1500, salary: 0 },
-            { prob: 40, desc: '경기 침체로 폐업… 권리금과 인테리어 비용을 날렸습니다.', cash: -7000, salary: 0 }
-          ] },
-        // 임원 승진: 운(50:50). 성공하면 연봉 +50%지만 임기가 끝나는 52세에 퇴직, 실패하면 50세에 퇴직
+          luck: {
+            success: { desc: '동네 맛집으로 소문났습니다! 쏠쏠한 부수입이 생겼습니다.', cash: 9000, salary: 0 },
+            fail: { desc: '경기 침체로 폐업… 권리금과 인테리어 비용을 날렸습니다.', cash: -7000, salary: 0 }
+          } },
+        // 임원 승진: 성공하면 연봉 +50%지만 임기가 끝나는 52세에 퇴직, 실패하면 50세에 퇴직
         // 퇴직 후 남은 3턴 기간은 연봉 없음 (4턴은 재취업해 기본 연봉으로 시작)
         { icon: '🎯', title: '임원 승진 도전', hint: '임원 자리를 놓고 승부합니다. 결과는 운에 달려 있고, 임원은 임기가 짧다는데…',
           exec: true,
-          outcomes: [
-            { prob: 50, desc: '임원 승진 성공! 연봉이 50% 올랐지만, 임기가 끝나 52세에 퇴직했습니다.', raise: 50, retireAge: 52 },
-            { prob: 50, desc: '임원 승진 실패… 50세에 회사를 떠났습니다.', raise: 0, retireAge: 50 }
-          ] },
+          luck: {
+            success: { desc: '임원 승진 성공! 연봉이 50% 올랐지만, 임기가 끝나 52세에 퇴직했습니다.', raise: 50, retireAge: 52 },
+            fail: { desc: '임원 승진 실패… 50세에 회사를 떠났습니다.', raise: 0, retireAge: 50 }
+          } },
         sideJob
     ],
     4: [
@@ -638,12 +645,11 @@ const choices = {
           outcomes: [
             { prob: 100, desc: '교육비 5,000만 원을 들여 기술을 익혔고, 정년이 연장되며 연봉이 10% 올랐습니다.', cash: -5000, salary: 10 }
           ] },
-        // 상가 투자: 운(50:50)
         { icon: '🏢', title: '노후 대비 상가(수익형 부동산) 투자', hint: '월세를 받는 상가에 투자합니다. 결과는 운에 달려 있습니다.',
-          outcomes: [
-            { prob: 50, desc: '우량 임차인 입주! 월세 수입과 시세 차익을 얻었습니다.', cash: 6000, salary: 0 },
-            { prob: 50, desc: '공실과 상권 침체로 상가 가격이 떨어졌습니다.', cash: -6000, salary: 0 }
-          ] }
+          luck: {
+            success: { desc: '우량 임차인 입주! 월세 수입과 시세 차익을 얻었습니다.', cash: 6000, salary: 0 },
+            fail: { desc: '공실과 상권 침체로 상가 가격이 떨어졌습니다.', cash: -6000, salary: 0 }
+          } }
     ]
 };
 
@@ -656,19 +662,43 @@ const pctText = n => (Math.abs(n) < 0.05 ? '0.0' : (n > 0 ? '+' : '') + n.toFixe
 const toneClass = n => n > 0 ? 'up' : (n < 0 ? 'down' : '');
 const readNum = id => parseFloat(document.getElementById(id).value) || 0;
 const setText = (id, text) => { document.getElementById(id).innerText = text; };
+// 만 원 단위 금액을 '1억 2,000만 원' 형태로 표시
+const wonText = n => {
+    const eok = Math.floor(n / 10000), man = n % 10000;
+    return (eok ? `${eok}억` : '') + (man ? `${eok ? ' ' : ''}${fmt(man)}만` : '') + ' 원';
+};
+const readStake = (turn, i) => Number(document.getElementById(`t${turn}_c_${i}_stake`).value);
+
+function updateStake(turn, i) {
+    const stake = readStake(turn, i);
+    const el = document.getElementById(`t${turn}_c_${i}_won`);
+    el.innerText = validStake(stake) ? `= ${wonText(stake)}` : '⚠️ 5,000~15,000 사이, 1,000 단위';
+    el.classList.toggle('down', !validStake(stake));
+}
 
 // 선택 사항 카드 렌더링 (금액·확률은 표시하지 않음)
 function renderChoices(turn) {
     document.getElementById(`t${turn}_choices`).innerHTML = choices[turn].map((c, i) => `
-        <label class="choice-card" for="t${turn}_c_${i}">
-            <input type="checkbox" id="t${turn}_c_${i}" onchange="this.closest('.choice-card').classList.toggle('selected', this.checked)">
-            <div>
-                <div class="c-title">${c.icon} [선택] ${c.title}</div>
-                <div class="c-hint">${c.hint}</div>
-                <div class="c-lock">🔒 금액 · 이익/손실 여부 비공개</div>
-                ${c.requires ? `<div class="c-req" id="t${turn}_c_${i}_req"></div>` : ''}
-            </div>
-        </label>
+        <div class="choice-card">
+            <label class="choice-main" for="t${turn}_c_${i}">
+                <input type="checkbox" id="t${turn}_c_${i}" onchange="this.closest('.choice-card').classList.toggle('selected', this.checked)">
+                <div>
+                    <div class="c-title">${c.icon} [선택] ${c.title}${c.luck ? ' <span class="c-luck">🎲 운</span>' : ''}</div>
+                    <div class="c-hint">${c.hint}</div>
+                    <div class="c-lock">🔒 금액 · 이익/손실 여부 비공개</div>
+                    ${c.requires ? `<div class="c-req" id="t${turn}_c_${i}_req"></div>` : ''}
+                </div>
+            </label>
+            ${c.luck ? `
+            <div class="c-stake">
+                <div class="c-stake-row">
+                    💰 거는 돈
+                    <input type="number" id="t${turn}_c_${i}_stake" min="${STAKE.min}" max="${STAKE.max}" step="${STAKE.step}" value="${STAKE.base}" oninput="updateStake(${turn}, ${i})"> 만 원
+                    <span class="c-stake-won" id="t${turn}_c_${i}_won">= ${wonText(STAKE.base)}</span>
+                </div>
+                <div class="c-stake-note">5,000만~1억 5,000만 원, 1,000만 원 단위 · 성공하면 건 돈 이상 수익, 실패하면 거는 돈에 비례해 손실</div>
+            </div>` : ''}
+        </div>
     `).join('');
     updateChoiceAvailability(turn);
 }
@@ -683,6 +713,8 @@ function updateChoiceAvailability(turn) {
         const input = document.getElementById(`t${turn}_c_${i}`);
         input.disabled = !ok;
         if (!ok) input.checked = false;
+        const stakeInput = document.getElementById(`t${turn}_c_${i}_stake`);
+        if (stakeInput) stakeInput.disabled = !ok;
         const card = input.closest('.choice-card');
         card.classList.toggle('unavailable', !ok);
         card.classList.toggle('selected', input.checked);
@@ -693,14 +725,16 @@ function updateChoiceAvailability(turn) {
 // 1턴 가정 형태 카드 렌더링 (택1, 금액은 표시하지 않음)
 function renderHousehold() {
     document.getElementById('t1_household').innerHTML = Object.entries(household).map(([key, h]) => `
-        <label class="choice-card" for="t1_hh_${key}">
-            <input type="radio" name="t1_household" id="t1_hh_${key}" value="${key}" onchange="syncHousehold()">
-            <div>
-                <div class="c-title">${h.icon} [필수] ${h.title}</div>
-                <div class="c-hint">${h.hint}</div>
-                <div class="c-lock">🔒 금액 · 이익/손실 여부 비공개</div>
-            </div>
-        </label>
+        <div class="choice-card">
+            <label class="choice-main" for="t1_hh_${key}">
+                <input type="radio" name="t1_household" id="t1_hh_${key}" value="${key}" onchange="syncHousehold()">
+                <div>
+                    <div class="c-title">${h.icon} [필수] ${h.title}</div>
+                    <div class="c-hint">${h.hint}</div>
+                    <div class="c-lock">🔒 금액 · 이익/손실 여부 비공개</div>
+                </div>
+            </label>
+        </div>
     `).join('');
 }
 
@@ -829,32 +863,53 @@ function execOutcome(o, salary, turn) {
     const raiseIncome = Math.round(salary * o.raise / 100 * workYears);
     const lostIncome = Math.round(salary * lostYears);
     return {
-        desc: `${o.desc} (${o.raise ? `${o.retireAge}세까지 ${workYears}년 연봉 인상분 ${signed(raiseIncome)}만 원 / ` : ''}퇴직 후 ${lostYears}년 연봉 없음 ${signed(-lostIncome)}만 원)`,
+        desc: `${o.desc} (${o.raise ? `${o.retireAge}세까지 ${workYears}년 연봉 인상분 ${signed(raiseIncome)}만 원 / ` : ''}퇴직 후 ${lostYears}년 연봉 없음 ${signed(-lostIncome)}만 원, 1억 기준)`,
         cash: raiseIncome - lostIncome,
         salary: 0,
         salaryText: (o.raise ? `+${o.raise}%, ` : '') + `${o.retireAge}세 퇴직`,
         salaryTone: o.raise ? 1 : -1,
         salaryLine: o.raise
             ? `🎯 임원 승진: ${o.retireAge}세 퇴직까지 ${workYears}년간 연봉 <strong class="up">${fmt(raisedSalary)}만 원</strong> (+${o.raise}%), 퇴직 후 ${lostYears}년은 연봉 없음`
-            : `🎯 임원 승진 실패: ${o.retireAge}세에 퇴직해 남은 ${lostYears}년은 연봉 없음 <strong class="down">${signed(-lostIncome)}만 원</strong>`,
+            : `🎯 임원 승진 실패: ${o.retireAge}세에 퇴직해 남은 ${lostYears}년은 연봉 없음`,
         retireAge: o.retireAge,
         raise: o.raise,
         raisedSalary
     };
 }
 
-// 선택 사항 결과 결정: 둘째 출산은 규칙 계산, 임원 승진·부업은 확률 추첨 후 연봉 비례 금액, 나머지는 확률 추첨
-function resolveOutcome(choice, salary, turn) {
-    if (choice.child) return childOutcome(choice.child, salary);
-    const o = pickOutcome(choice.outcomes);
-    if (choice.exec) return execOutcome(o, salary, turn);
-    if (!choice.sideJob) return o;
+// 부업 정산 (1억 기준): 성공은 연봉 비례 수익, 실패는 무작위 손실
+function sideJobOutcome(o, salary, turn) {
     if (o.lossMax) {
         const loss = o.lossMin + Math.round(Math.random() * (o.lossMax - o.lossMin) / 100) * 100;
-        return { desc: `${o.desc} (손실 ${fmt(loss)}만 원 / 최대 ${fmt(o.lossMax)}만 원)`, cash: -loss, salary: 0 };
+        return { desc: `${o.desc} (1억 기준 최대 ${fmt(o.lossMax)}만 원 손실)`, cash: -loss, salary: 0 };
     }
     const years = HOUSEHOLD_YEARS[turn];
-    return { desc: `${o.desc} (연봉의 ${o.rate}% × ${years}년)`, cash: Math.round(salary * years * o.rate / 100), salary: 0 };
+    return { desc: `${o.desc} (1억 기준 연봉의 ${o.rate}% × ${years}년)`, cash: Math.round(salary * years * o.rate / 100), salary: 0 };
+}
+
+// 선택 사항 결과 결정
+// - 운 요소(luck): 거는 돈으로 성공 확률을 정해 추첨, 금전 결과 = 1억 기준 금액 × (거는 돈 / 1억), 성공 시 최소 건 돈 보장
+// - 둘째 출산: 규칙 계산 / 나머지: 정해진 결과
+function resolveOutcome(choice, salary, turn, stake) {
+    if (choice.child) return childOutcome(choice.child, salary);
+    if (!choice.luck) return pickOutcome(choice.outcomes);
+
+    const success = Math.random() * 100 < successRate(stake);
+    const o = success ? choice.luck.success : choice.luck.fail;
+    const base = choice.exec ? execOutcome(o, salary, turn) : (choice.sideJob ? sideJobOutcome(o, salary, turn) : { ...o });
+    const scale = stake / STAKE.base;
+    const scaledCash = Math.round(base.cash * scale);
+    const cash = success ? Math.max(scaledCash, stake) : scaledCash;
+    return { ...base, cash, luck: { stake, success, baseCash: base.cash, scale, scaledCash, guaranteed: cash !== scaledCash } };
+}
+
+// 운 요소 결과 설명 (확률은 표시하지 않음)
+function luckLine(outcome) {
+    const l = outcome.luck;
+    let text = `🎲 ${wonText(l.stake)} 걸고 <strong class="${l.success ? 'up' : 'down'}">${l.success ? '성공' : '실패'}</strong>`;
+    if (l.guaranteed) return `${text} → 성공 보장(건 돈 이상) <strong class="up">${signed(outcome.cash)}만 원</strong>`;
+    if (l.scale !== 1) text += ` · 1억 기준 ${signed(l.baseCash)}만 × ${+l.scale.toFixed(1)}배 = ${signed(l.scaledCash)}만`;
+    return text;
 }
 
 // 완료 버튼 처리: 선택 결과 공개 + 정산 후 상단 탭으로 다음 턴 이동 안내 (수정사항 다)
@@ -875,14 +930,20 @@ function completeTurn(turn) {
     // 가정 형태 (1턴에서 선택, 3턴까지 유지)
     const hhKey = turn === 1 ? hhInput.value : records[1].household.key;
 
-    // 선택 사항 결과는 이 시점에 처음 정해지고 공개됨 (가정 형태 조건이 맞지 않는 항목은 제외)
-    const picks = [];
-    choices[turn].forEach((choice, i) => {
-        if (choice.requires && choice.requires !== hhKey) return;
-        if (document.getElementById(`t${turn}_c_${i}`).checked) {
-            picks.push({ choice, outcome: resolveOutcome(choice, calc.salary, turn) });
-        }
-    });
+    // 선택 사항 (가정 형태 조건이 맞지 않는 항목은 제외)
+    const selected = choices[turn]
+        .map((choice, i) => ({ choice, i }))
+        .filter(({ choice, i }) => !(choice.requires && choice.requires !== hhKey) && document.getElementById(`t${turn}_c_${i}`).checked);
+    if (selected.some(({ choice, i }) => choice.luck && !validStake(readStake(turn, i)))) {
+        alert("거는 돈은 5,000만~1억 5,000만 원 사이에서 1,000만 원 단위로 입력하세요!");
+        return;
+    }
+
+    // 선택 사항 결과는 이 시점에 처음 정해지고 공개됨
+    const picks = selected.map(({ choice, i }) => ({
+        choice,
+        outcome: resolveOutcome(choice, calc.salary, turn, choice.luck ? readStake(turn, i) : 0)
+    }));
 
     const cfg = config[turn];
     const choiceCash = picks.reduce((sum, pk) => sum + pk.outcome.cash, 0);
@@ -958,6 +1019,7 @@ function renderResult(turn) {
         return `<div class="outcome-card ${v.cls}">
             <div class="outcome-head"><span>${choice.icon} ${choice.title}</span><span class="verdict ${v.cls}">${v.text}</span></div>
             <div class="outcome-desc">${outcome.desc}</div>
+            ${outcome.luck ? `<div class="outcome-luck">${luckLine(outcome)}</div>` : ''}
             <div class="outcome-nums">
                 <span>💰 금전: <strong class="${toneClass(outcome.cash)}">${outcome.cash ? signed(outcome.cash) + '만 원' : '변화 없음'}</strong></span>
                 <span>💼 연봉: <strong class="${toneClass(outcome.salaryText ? outcome.salaryTone : outcome.salary)}">${outcome.salaryText || (outcome.salary ? (outcome.salary > 0 ? '+' : '') + outcome.salary + '%' : '변화 없음')}</strong></span>
@@ -1073,6 +1135,7 @@ function renderSummary() {
             if (outcome.cash) parts.push(`${signed(outcome.cash)}만`);
             if (outcome.salaryText) parts.push(outcome.raise ? `연봉 ${outcome.salaryText}` : outcome.salaryText);
             else if (outcome.salary) parts.push(`연봉 ${outcome.salary > 0 ? '+' : ''}${outcome.salary}%`);
+            if (outcome.luck) parts.push(`${wonText(outcome.luck.stake).replace(' 원', '')} 걸고 ${outcome.luck.success ? '성공' : '실패'}`);
             return pickLine(choice.icon, verdict(outcome), parts.join(' / ') || '변화 없음');
         });
         if (rec.household) {
