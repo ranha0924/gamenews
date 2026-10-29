@@ -789,20 +789,18 @@ const sideJob = {
 
 // 턴별 선택 사항 (수정사항: 선택지 2~3개로 확장 & 결과 비공개)
 // outcomes: 선택 완료 시 확률(prob, %)에 따라 하나가 정해짐 / luck: 🎲 운 요소 (턴마다 1개, 거는 돈으로 성공 확률·금액이 정해짐)
-// cash: 정산되는 금액 (만 원) / salary: 연봉 변화율 (%)
+// 일반 선택지(운 요소 제외)는 비용(cost)이 들지만 그보다 큰 이익(gain: 수익, salary: 연봉 상승률 %)이 생김
+// cash: 정산되는 금액 (만 원) / salaryMonths: 이번 턴에 연봉 상승을 적용하는 기간 (기본은 후반 5년)
 const choices = {
     1: [
         { icon: '🎓', title: '대학원 진학·전문 자격증 취득', hint: '학비와 시간이 들지만, 몸값이 달라질 수도 있습니다.',
           outcomes: [
-            { prob: 50, desc: '취득 성공! 전문성을 인정받아 연봉 협상에 성공했습니다.', cash: -3000, salary: 5 },
-            { prob: 30, desc: '취득은 했지만 회사의 인정이 기대보다 적어 연봉이 조금만 올랐습니다.', cash: -3000, salary: 4 },
-            { prob: 20, desc: '업무와 병행하다 중도 포기… 학비만 날렸습니다.', cash: -2000, salary: 0 }
+            { prob: 60, desc: '학비가 들었지만 자격증을 따서 전문성을 인정받고 연봉이 올랐습니다.', cost: 3000, salary: 5 },
+            { prob: 40, desc: '학비가 들었지만 자격증을 따서 연봉이 올랐습니다. (기대보다는 조금 덜 올랐어요)', cost: 3000, salary: 4 }
           ] },
         { icon: '🚗', title: '신차 구입', hint: '출퇴근과 생활이 편해지고 활동 반경이 넓어집니다.',
           outcomes: [
-            { prob: 60, desc: '무사고로 잘 탔지만 차값은 꾸준히 떨어졌습니다. (감가상각·유지비)', cash: -3000, salary: 0 },
-            { prob: 25, desc: '외근·영업에 차를 적극 활용해 실적이 올랐습니다.', cash: -3000, salary: 2 },
-            { prob: 15, desc: '접촉 사고 발생! 수리비에 보험료 할증까지 겹쳤습니다.', cash: -4500, salary: 0 }
+            { prob: 100, desc: '차값과 유지비가 들었지만, 외근·영업에 차를 적극 활용해 실적이 올랐습니다.', cost: 3000, salary: 2 }
           ] },
         { icon: '🚀', title: '스타트업 이직', hint: '안정성은 낮지만, 회사가 성장한다면 기회가 클 수도 있습니다.',
           luck: {
@@ -814,15 +812,11 @@ const choices = {
     2: [
         { icon: '🏠', title: '내집 마련 (주택담보대출 활용)', hint: '전세살이를 끝내고 내 집을 삽니다. 집값과 금리가 관건입니다.',
           outcomes: [
-            { prob: 40, desc: '집값이 크게 올라 시세 차익이 생겼습니다!', cash: 10000, salary: 0 },
-            { prob: 35, desc: '집값은 제자리, 대출 이자만 꾸준히 나갔습니다.', cash: -3000, salary: 0 },
-            { prob: 25, desc: '금리 급등에 집값까지 하락… 이자 부담이 커졌습니다.', cash: -9000, salary: 0 }
+            { prob: 100, desc: '대출 이자와 취득세가 들었지만, 집값이 올라 시세 차익이 생겼습니다.', cost: 4000, gain: 10000 }
           ] },
         { icon: '💼', title: '승진 도전 (야근·사내 MBA)', hint: '회사에 모든 것을 걸어 봅니다. 대신 건강과 가족 시간은 줄어듭니다.',
           outcomes: [
-            { prob: 50, desc: '팀장 승진 성공! 연봉이 크게 올랐습니다.', cash: -500, salary: 15 },
-            { prob: 30, desc: '승진은 미끄러졌지만 성과급을 조금 받았습니다.', cash: 500, salary: 3 },
-            { prob: 20, desc: '과로로 번아웃… 병원비가 들고 휴직으로 연봉이 줄었습니다.', cash: -2500, salary: -5 }
+            { prob: 100, desc: '야근과 사내 MBA 학비가 들었지만, 팀장으로 승진해 연봉이 올랐습니다.', cost: 2000, salary: 5 }
           ] },
         { icon: '🪙', title: '지인 추천 고수익 투자 (코인·비상장주)', hint: '"이번엔 진짜야, 몇 배는 오른대!" 친한 친구의 권유입니다.',
           luck: {
@@ -837,9 +831,7 @@ const choices = {
     3: [
         { icon: '👵', title: '부모 부양 및 의료비 지원', hint: '연로하신 부모님의 생활비와 병원비를 지원합니다.',
           outcomes: [
-            { prob: 50, desc: '부모님이 건강을 회복하셔서 생활비 위주로 지원했습니다.', cash: -3000, salary: 0 },
-            { prob: 35, desc: '장기 입원과 간병으로 의료비가 크게 늘었습니다.', cash: -6000, salary: 0 },
-            { prob: 15, desc: '고마워하신 부모님이 시골 땅을 증여해 주셨습니다.', cash: 3000, salary: 0 }
+            { prob: 100, desc: '부모님의 생활비와 병원비를 지원했고, 고마워하신 부모님이 시골 땅을 증여해 주셨습니다.', cost: 4000, gain: 6000 }
           ] },
         { icon: '🏪', title: '퇴직 대비 프랜차이즈 가게 창업', hint: '퇴직 후를 대비해 미리 가게를 차려 봅니다.',
           luck: {
@@ -860,11 +852,13 @@ const choices = {
         // 자녀 지원: 결혼 지원금 5,000만 원은 한 번만 지출, 독립한 자녀가 부모에게 매달 100만 원 × 120개월(12,000만 원)을 보내 줌
         { icon: '💍', title: '자녀 독립 및 결혼 지원', hint: '자녀의 결혼 자금을 지원하고 독립시킵니다.',
           outcomes: [
-            { prob: 100, desc: '결혼 지원금 5,000만 원을 한 번 지원했고, 독립한 자녀가 매달 100만 원씩(10년간 +12,000만 원) 용돈을 보내 주었습니다.', cash: 7000, salary: 0 }
+            { prob: 100, desc: '결혼 지원금 5,000만 원을 한 번 지원했고, 독립한 자녀가 매달 100만 원씩(10년간) 용돈을 보내 주었습니다.', cost: 5000, gain: 12000 }
           ] },
+        // 정년 연장: 55세부터 바로 연봉이 올라 4턴 10년 전체에 적용 (후반 5년만 적용하면 비용을 회수하지 못함)
+        // 연봉 +12%: 스타트업 실패로 연봉이 10% 깎인 경우에도 비용(5,000만 원)보다 이익이 크도록
         { icon: '🔧', title: '정년 연장·재취업 준비 (기술 자격증)', hint: '은퇴 후에도 일할 수 있도록 새로운 기술을 배웁니다.',
           outcomes: [
-            { prob: 100, desc: '교육비 5,000만 원을 들여 기술을 익혔고, 정년이 연장되며 연봉이 10% 올랐습니다.', cash: -5000, salary: 10 }
+            { prob: 100, desc: '교육비 5,000만 원을 들여 기술을 익혔고, 55세부터 정년이 연장되며 연봉이 12% 올랐습니다.', cost: 5000, salary: 12, salaryMonths: 120 }
           ] },
         { icon: '🏢', title: '노후 대비 상가(수익형 부동산) 투자', hint: '월세를 받는 상가에 투자합니다. 결과는 운에 달려 있습니다.',
           luck: {
@@ -1106,7 +1100,31 @@ function childOutcome(spec, salary) {
         desc: `둘째가 태어났습니다! 육아비(연봉의 ${spec.costRate}% × ${spec.years}년) ${signed(-cost)}만 원이 들었지만, 
             국가 지원으로 육아비의 ${spec.subsidyRate}%인 ${signed(subsidy)}만 원을 받았습니다.`,
         cash: subsidy - cost,
-        salary: 0
+        salary: 0,
+        general: { cost, gain: subsidy, salary: 0, projected: 0, net: subsidy - cost }
+    };
+}
+
+// 연봉 상승으로 64세까지 늘어나는 소득 (예상): 이번 턴 적용 기간 + 다음 턴들 10년씩, 이후 다른 변화가 없다고 가정
+function projectedSalaryGain(turn, mult, pct, months) {
+    let gain = config[turn].income * mult * pct / 100 * months;
+    for (let t = turn + 1; t <= 4; t++) gain += config[t].income * mult * pct / 100 * 120;
+    return Math.round(gain);
+}
+
+// 일반 선택지 정산: 비용이 들지만 수익이나 연봉 상승으로 그 이상을 돌려받음 (연봉 상승은 64세까지의 예상 소득으로 계산)
+function generalOutcome(o, salary, turn) {
+    const mult = salary / (config[turn].income * 12);
+    const pct = o.salary || 0;
+    const salaryMonths = o.salaryMonths || SALARY_APPLY_MONTHS;
+    const gain = o.gain || 0;
+    const projected = pct ? projectedSalaryGain(turn, mult, pct, salaryMonths) : 0;
+    return {
+        ...o,
+        cash: gain - o.cost,
+        salary: pct,
+        salaryMonths,
+        general: { cost: o.cost, gain, salary: pct, projected, net: gain - o.cost + projected }
     };
 }
 
@@ -1145,7 +1163,10 @@ function sideJobOutcome(o, salary, turn) {
 
 // 임원 승진·부업처럼 연봉에 따라 금액이 정해지는 결과는 따로 계산
 const expandOutcome = (choice, o, salary, turn) =>
-    choice.exec ? execOutcome(o, salary, turn) : (choice.sideJob ? sideJobOutcome(o, salary, turn) : { ...o });
+    choice.exec ? execOutcome(o, salary, turn)
+    : choice.sideJob ? sideJobOutcome(o, salary, turn)
+    : o.cost !== undefined ? generalOutcome(o, salary, turn)
+    : { ...o };
 
 // 선택 사항 결과 결정
 // - 운 요소(luck): 거는 돈으로 성공 확률을 정해 추첨, 금전 결과 = 1억 기준 금액 × (거는 돈 / 1억), 성공 시 최소 건 돈 보장
@@ -1200,10 +1221,16 @@ function completeChoices(turn) {
     }));
 
     const choiceCash = picks.reduce((sum, pk) => sum + pk.outcome.cash, 0);
-    const multAfter = picks.reduce((m, pk) => m * (1 + pk.outcome.salary / 100), b.mult);
-    const monthlyAfter = cfg.income * multAfter;
+    // 연봉 변화는 선택마다 차례로 반영 (이번 턴 적용 기간은 기본 후반 5년, 선택에 따라 다를 수 있음)
+    let monthlyAfter = b.monthly, salaryIncome = 0;
+    picks.forEach(({ outcome }) => {
+        const raise = monthlyAfter * outcome.salary / 100;
+        salaryIncome += raise * (outcome.salaryMonths || SALARY_APPLY_MONTHS);
+        monthlyAfter += raise;
+    });
+    const multAfter = monthlyAfter / cfg.income;
     const salaryAfter = Math.round(monthlyAfter * 12);
-    const salaryIncomeDelta = Math.round((monthlyAfter - b.monthly) * SALARY_APPLY_MONTHS);
+    const salaryIncomeDelta = Math.round(salaryIncome);
 
     // 가정 형태 정산: 맞벌이는 배우자 소득 추가, 육아비는 기준 금액의 일정 비율
     const hhYears = HOUSEHOLD_YEARS[turn];
@@ -1284,10 +1311,24 @@ function completeTurn(turn) {
 }
 
 function verdict(o) {
+    if (o.general) {
+        if (o.general.net > 0) return { cls: 'gain', text: '이익' };
+        return o.general.net < 0 ? { cls: 'loss', text: '손실' } : { cls: '', text: '변화 없음' };
+    }
     if (o.cash === 0 && o.salary === 0) return { cls: '', text: '변화 없음' };
     if (o.cash >= 0 && o.salary >= 0) return { cls: 'gain', text: '이익' };
     if (o.cash <= 0 && o.salary <= 0) return { cls: 'loss', text: '손실' };
     return { cls: 'mixed', text: '이익 + 손실' };
+}
+
+// 일반 선택지 결과: 비용과 이익(수익·연봉 상승)을 나눠서 표시
+function generalNums(g) {
+    return [
+        `<span>💸 비용: <strong class="down">${signed(-g.cost)}만 원</strong></span>`,
+        g.gain ? `<span>💰 수익: <strong class="up">${signed(g.gain)}만 원</strong></span>` : '',
+        g.salary ? `<span>📈 연봉: <strong class="up">+${g.salary}%</strong> <span class="sub-note">(64세까지 소득 +${fmt(g.projected)}만 원 예상)</span></span>` : '',
+        `<span>✅ 순이익: <strong class="${toneClass(g.net)}">${signed(g.net)}만 원${g.salary ? ' (예상)' : ''}</strong></span>`
+    ].join('');
 }
 
 // STEP 1 결과 발표: ① 선택 결과 → ② 선택에 따른 연봉 변화 → ③ 필수·선택에 따른 금액 변화 설명
@@ -1302,8 +1343,9 @@ function renderChoiceResult(turn) {
             <div class="outcome-desc">${outcome.desc}</div>
             ${outcome.luck ? `<div class="outcome-luck">${luckLine(outcome)}</div>` : ''}
             <div class="outcome-nums">
+                ${outcome.general ? generalNums(outcome.general) : `
                 <span>💰 금전: <strong class="${toneClass(outcome.cash)}">${outcome.cash ? signed(outcome.cash) + '만 원' : '변화 없음'}</strong></span>
-                <span>💼 연봉: <strong class="${toneClass(outcome.salaryText ? outcome.salaryTone : outcome.salary)}">${outcome.salaryText || (outcome.salary ? (outcome.salary > 0 ? '+' : '') + outcome.salary + '%' : '변화 없음')}</strong></span>
+                <span>💼 연봉: <strong class="${toneClass(outcome.salaryText ? outcome.salaryTone : outcome.salary)}">${outcome.salaryText || (outcome.salary ? (outcome.salary > 0 ? '+' : '') + outcome.salary + '%' : '변화 없음')}</strong></span>`}
             </div>
         </div>`;
     }).join('') : '<p class="muted">이번 턴에는 선택한 항목이 없습니다.</p>';
@@ -1356,7 +1398,7 @@ function renderChoiceResult(turn) {
             ${householdLine}
             ${pickSalaryLines}
             <li>${salaryStatus}</li>
-            <li>연봉 변화에 따른 이번 턴 소득 증감 (후반 5년): <strong class="${toneClass(rec.salaryIncomeDelta)}">${signed(rec.salaryIncomeDelta)}만 원</strong></li>
+            <li>연봉 변화에 따른 이번 턴 소득 증감: <strong class="${toneClass(rec.salaryIncomeDelta)}">${signed(rec.salaryIncomeDelta)}만 원</strong></li>
             <li>${nextLine}</li>
         </ul>`;
 
@@ -1368,9 +1410,12 @@ function renderChoiceResult(turn) {
     ];
     if (hh) flowRows.push([`${hh.icon} [가정] ${hh.title} (${hh.dualIncome ? `배우자 소득 ${signed(hh.spouseIncome)}만, ` : ''}육아비 ${signed(-hh.childcare)}만)`, hh.net, true]);
     rec.picks.forEach(({ choice, outcome }) => {
-        flowRows.push([`${choice.icon} [선택] ${choice.title}${outcome.luck ? ` (${outcome.luck.success ? '성공' : '실패'})` : ''}`, outcome.cash, true]);
+        const g = outcome.general;
+        const detail = outcome.luck ? ` (${outcome.luck.success ? '성공' : '실패'})`
+            : g ? ` (비용 ${signed(-g.cost)}만${g.gain ? `, 수익 ${signed(g.gain)}만` : ''})` : '';
+        flowRows.push([`${choice.icon} [선택] ${choice.title}${detail}`, outcome.cash, true]);
     });
-    if (rec.salaryIncomeDelta) flowRows.push(['📈 연봉 변화로 달라진 이번 턴 소득 (후반 5년)', rec.salaryIncomeDelta, true]);
+    if (rec.salaryIncomeDelta) flowRows.push(['📈 연봉 변화로 달라진 이번 턴 소득', rec.salaryIncomeDelta, true]);
     const moneyFlow = `
         <table class="money-flow">
             ${flowRows.map(([label, amount, isChange]) => `<tr><td>${label}</td><td class="${isChange ? toneClass(amount) : ''}">${isChange ? signed(amount) : fmt(amount)}만 원</td></tr>`).join('')}
@@ -1493,6 +1538,14 @@ function renderSummary() {
         const pickLine = (icon, v, detail) =>
             `<div class="pick-line">${icon} <span class="${v.cls === 'gain' ? 'up' : (v.cls === 'loss' ? 'down' : '')}">${v.text}</span> (${detail})</div>`;
         const lines = rec.picks.map(({ choice, outcome }) => {
+            const g = outcome.general;
+            if (g) {
+                const parts = [`비용 ${signed(-g.cost)}만`];
+                if (g.gain) parts.push(`수익 ${signed(g.gain)}만`);
+                if (g.salary) parts.push(`연봉 +${g.salary}%`);
+                parts.push(`순이익 ${signed(g.net)}만${g.salary ? '(예상)' : ''}`);
+                return pickLine(choice.icon, verdict(outcome), parts.join(' / '));
+            }
             const parts = [];
             if (outcome.cash) parts.push(`${signed(outcome.cash)}만`);
             if (outcome.salaryText) parts.push(outcome.raise ? `연봉 ${outcome.salaryText}` : outcome.salaryText);
