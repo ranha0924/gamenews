@@ -492,6 +492,7 @@ const scenarios = {
     5: { name: '골디락스',      dep: 3, stk: 15,  bnd: 5 }
 };
 // 흥덕 뉴스(같은 번호의 시나리오) 기사와 해설: 최종 완료 후 '왜 이렇게 나왔을까?'에 표시
+// 신문 사이트는 주소 끝의 #scenario-번호로 그 시나리오 탭을 바로 엶
 const NEWS_URL = 'https://newsgame-eight.vercel.app/';
 const scenarioNews = {
     1: {
@@ -1702,8 +1703,8 @@ function whyHtml(rec) {
         <div class="paper">
             <div class="paper-head">
                 <span class="paper-name">흥덕 뉴스</span>
-                <span class="paper-issue">${escapeHtml(news.issue)} (사이트에서 '시나리오 ${rec.scenarioNo}' 탭)</span>
-                <a class="paper-link" href="${NEWS_URL}" target="_blank" rel="noopener">신문 보러 가기</a>
+                <span class="paper-issue">${escapeHtml(news.issue)} (신문 사이트의 '시나리오 ${rec.scenarioNo}' 탭이 바로 열려요)</span>
+                <a class="paper-link" href="${NEWS_URL}#scenario-${rec.scenarioNo}" target="_blank" rel="noopener">시나리오 ${rec.scenarioNo} 신문 보러 가기</a>
             </div>
             <p class="paper-title">시나리오 ${rec.scenarioNo}: ${escapeHtml(news.title)}</p>
             <p class="why-summary">${escapeHtml(news.summary)}</p>
