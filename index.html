@@ -313,8 +313,6 @@
         .paper-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; padding-bottom: 10px; border-bottom: 3px solid var(--navy); }
         .paper-name { font: 700 24px/1.2 var(--px); }
         .paper-issue { font-size: 13px; color: var(--muted); }
-        .paper-link { margin-left: auto; padding: 6px 10px; background: var(--navy); color: var(--white); font: 700 12px/1.2 var(--px); text-decoration: none; }
-        .paper-link:hover { background: var(--navy-2); }
         .paper-title { margin: 12px 0 0; font: 15px/1.5 var(--px-text); }
         .why-summary { margin: 10px 0 0; }
         .paper h5 { color: var(--navy) !important; }
@@ -474,7 +472,6 @@ const scenarios = {
     5: { name: '골디락스',      dep: 3, stk: 15,  bnd: 5 }
 };
 // 흥덕 뉴스(같은 번호의 시나리오) 기사와 해설: 최종 완료 후 '왜 이렇게 나왔을까?'에 표시
-const NEWS_URL = 'https://newsgame-eight.vercel.app/';
 const scenarioNews = {
     1: {
         issue: "제1호 · 202X년 4월",
@@ -1547,8 +1544,7 @@ function whyHtml(rec) {
         <div class="paper">
             <div class="paper-head">
                 <span class="paper-name">흥덕 뉴스</span>
-                <span class="paper-issue">${escapeHtml(news.issue)} (사이트에서 '시나리오 ${rec.scenarioNo}' 탭)</span>
-                <a class="paper-link" href="${NEWS_URL}" target="_blank" rel="noopener">신문 보러 가기</a>
+                <span class="paper-issue">${escapeHtml(news.issue)}</span>
             </div>
             <p class="paper-title">시나리오 ${rec.scenarioNo}: ${escapeHtml(news.title)}</p>
             <p class="why-summary">${escapeHtml(news.summary)}</p>
