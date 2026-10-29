@@ -59,6 +59,7 @@
         .tab-btn.locked::after { background-image: url('assets/lock.png'); }
         .tab-btn.completed { background: var(--grass-dark); }
         .tab-btn.completed small { color: var(--white); }
+        .tab-btn.completed:disabled { color: var(--white); }
         .tab-btn.completed::after { background-image: url('assets/check.png'); width: 22px; height: 20px; }
         .tab-btn.active { background: var(--yellow); color: var(--navy); }
         .tab-btn.active small { color: var(--navy); }
@@ -411,7 +412,8 @@
         <div>
             <p><strong>1단계 선택 완료 → 2단계 자산 배분 확정 → 3단계 시나리오 상자(1~5) 열기 → 4단계 최종 완료</strong></p>
             <p>선택 사항의 금액과 이익/손실 여부는 선택 완료를 눌러야 공개되고, 끝낸 단계는 되돌릴 수 없습니다.
-                대출은 단계와 상관없이 언제든 받을 수 있습니다. 최종 완료 후 화면 위의 다음 턴 칸을 눌러 넘어가세요.</p>
+                대출은 단계와 상관없이 언제든 받을 수 있습니다. 최종 완료 후 화면 위의 다음 턴 칸을 눌러 넘어가세요.
+                지난 턴은 4턴까지 모두 마친 뒤에 다시 볼 수 있습니다.</p>
         </div>
     </section>
 
@@ -1423,6 +1425,17 @@ function completeTurn(turn) {
     const tab = document.getElementById(`tab${turn}`);
     tab.classList.remove('next-ready');
     tab.classList.add('completed');
+    // 4턴을 모두 마치기 전에는 끝낸 턴으로 돌아갈 수 없음 (마치면 모든 턴을 다시 볼 수 있음)
+    if (turn < 4) {
+        tab.disabled = true;
+        tab.title = '4턴까지 모두 마친 뒤에 다시 볼 수 있어요';
+    } else {
+        for (let t = 1; t <= 4; t++) {
+            const doneTab = document.getElementById(`tab${t}`);
+            doneTab.disabled = false;
+            doneTab.removeAttribute('title');
+        }
+    }
 
     // 다음 턴 자산 배분은 이번 턴에 확정한 비율에서 시작
     if (turn < 4) ASSETS.forEach(([k]) => { document.getElementById(`t${turn + 1}_p_${k}`).value = rec.p[k]; });
@@ -1635,7 +1648,7 @@ function renderFinalResult(turn) {
         대출로 얻은 순효과는 <span class="${toneClass(loanNet)}">${signed(loanNet)}만 원</span>이에요.
         (${loanNet >= 0 ? '번 돈이 이자보다 커서 이득' : '번 돈이 이자보다 작아 손해'})</p>` : '';
     const nextHint = turn < 4
-        ? `화면 위의 [${turn + 1}턴] 칸을 눌러 다음 턴(${config[turn + 1].name})으로 넘어가세요!`
+        ? `화면 위의 [${turn + 1}턴] 칸을 눌러 다음 턴(${config[turn + 1].name})으로 넘어가세요! 넘어가면 4턴을 마칠 때까지 이 턴으로 돌아올 수 없어요.`
         : '화면 위의 [최종 결과] 칸을 눌러 최종 리포트를 확인하세요!';
 
     const el = document.getElementById(`t${turn}_result`);
@@ -1748,6 +1761,7 @@ function initGame() {
         btn.classList.remove('completed', 'next-ready');
         btn.classList.toggle('locked', idx >= 1 && idx <= 3);
         btn.disabled = idx > 0;
+        btn.removeAttribute('title');
     });
     document.getElementById('tab5').style.display = 'none';
 
