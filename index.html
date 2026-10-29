@@ -59,6 +59,7 @@
         .tab-btn.locked::after { background-image: url('assets/lock.png'); }
         .tab-btn.completed { background: var(--grass-dark); }
         .tab-btn.completed small { color: var(--white); }
+        .tab-btn.completed:disabled { color: var(--white); }
         .tab-btn.completed::after { background-image: url('assets/check.png'); width: 22px; height: 20px; }
         .tab-btn.active { background: var(--yellow); color: var(--navy); }
         .tab-btn.active small { color: var(--navy); }
@@ -215,7 +216,10 @@
         .alloc-item label { font: 700 24px/1.2 var(--px); }
         .gauge { position: relative; width: 100%; max-width: 200px; height: 22px; border: 3px solid var(--white); background: var(--navy-3); --pct: 0; }
         .gauge span { position: absolute; inset: 0 auto 0 0; width: calc(var(--pct) * 1%); background: var(--yellow); }
+        .gauge.limited::before { content: ''; position: absolute; top: 0; bottom: 0; left: calc(var(--min) * 1%); width: calc((var(--max) - var(--min)) * 1%); background: var(--navy-2); }
         .gauge::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 3px), var(--navy-3) calc(10% - 3px) 10%); }
+        .alloc-range { margin: -4px 0 0; font: 700 12px/1.4 var(--px); color: var(--muted); }
+        .alloc-range:empty { display: none; }
         .num-ctrl { display: flex; align-items: center; gap: 6px; font: 15px/1 var(--px-text); }
         .num-ctrl input { width: 64px; }
         .alloc-preview { margin: 14px 0 0; font: 15px/1.6 var(--px-text); color: var(--yellow); }
@@ -369,6 +373,7 @@
             .alloc-item { flex-direction: row; flex-wrap: wrap; justify-content: space-between; padding-bottom: 14px; border-bottom: 3px solid var(--navy-2); }
             .bld { width: calc(var(--w) / 2); image-rendering: auto; }
             .gauge { max-width: none; order: 3; }
+            .alloc-range { order: 4; flex-basis: 100%; margin: 0; }
             .chests { gap: 2px; }
             .chest { padding: 18px 0 4px; border-width: 2px; }
             .chest-img { width: 49px; height: 54px; }
@@ -407,7 +412,8 @@
         <div>
             <p><strong>1단계 선택 완료 → 2단계 자산 배분 확정 → 3단계 시나리오 상자(1~5) 열기 → 4단계 최종 완료</strong></p>
             <p>선택 사항의 금액과 이익/손실 여부는 선택 완료를 눌러야 공개되고, 끝낸 단계는 되돌릴 수 없습니다.
-                대출은 단계와 상관없이 언제든 받을 수 있습니다. 최종 완료 후 화면 위의 다음 턴 칸을 눌러 넘어가세요.</p>
+                대출은 단계와 상관없이 언제든 받을 수 있습니다. 최종 완료 후 화면 위의 다음 턴 칸을 눌러 넘어가세요.
+                지난 턴은 4턴까지 모두 마친 뒤에 다시 볼 수 있습니다.</p>
         </div>
     </section>
 
@@ -585,18 +591,19 @@ const spriteImg = (name, cls, alt = '') => {
     const [w, h] = SPRITE_SIZE[name];
     return `<img class="${cls}" src="assets/${name}.png" alt="${alt}" width="${w}" height="${h}" style="--w:${w}px">`;
 };
-// 턴별 화면: 시기 이름, 거리 시간대(인생을 하루로: 아침 → 낮 → 오후 → 노을), 캐릭터 나이, 자산 배분 기본값(예금·주식·채권 %)
+// 턴별 화면: 시기 이름, 거리 시간대(인생을 하루로: 아침 → 낮 → 오후 → 노을), 캐릭터 나이
+// 1턴만 자산 배분 기본값(예금·주식·채권 %)이 있고, 2턴부터는 지난 턴에 확정한 비율에서 시작
 const VIEW = {
     1: { stage: '사회초년기', ages: '25~34세', scene: 'morning', age: 25, alloc: [40, 40, 20] },
-    2: { stage: '가계 형성기', ages: '35~44세', scene: 'noon', age: 35, alloc: [40, 40, 20] },
-    3: { stage: '지출 피크기', ages: '45~54세', scene: 'afternoon', age: 45, alloc: [30, 40, 30] },
-    4: { stage: '은퇴 준비기', ages: '55~64세', scene: 'dusk', age: 55, alloc: [60, 20, 20] }
+    2: { stage: '가계 형성기', ages: '35~44세', scene: 'noon', age: 35 },
+    3: { stage: '지출 피크기', ages: '45~54세', scene: 'afternoon', age: 45 },
+    4: { stage: '은퇴 준비기', ages: '55~64세', scene: 'dusk', age: 55 }
 };
 
 // 대출: 한도 3억, 1,000만 원 단위, 그 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져감
-// 금리 = 직전 턴 시나리오의 금리(예금 이자율) + 은행 가산금리 / 1턴은 직전 턴이 없어 기본 금리를 씀
+// 금리 = 직전 턴에 뽑은 시나리오의 예금금리 그대로 / 1턴은 직전 턴이 없어 기본 금리를 씀
 // 게임의 자산 수익률이 턴마다 한 번 적용되는 것처럼, 대출 이자도 턴 전체에 한 번 적용
-const LOAN = { max: 30000, step: 1000, spread: 2, firstTurnBase: 3 };
+const LOAN = { max: 30000, step: 1000, firstTurnBase: 3 };
 
 // 턴별 기본 설정 (금액 단위: 만 원 / income·expense는 월 기준, 10년 잉여 자금 = (월 소득 - 월 생활비) × 120개월)
 const config = {
@@ -758,10 +765,11 @@ function turnPageHtml(t) {
         <div class="alloc-item">
             ${spriteImg(BUILDING[k], 'bld')}
             <label for="t${t}_p_${k}">${label}</label>
-            <div class="gauge" id="t${t}_g_${k}"><span></span></div>
+            <div class="gauge${t > 1 ? ' limited' : ''}" id="t${t}_g_${k}"><span></span></div>
+            <p class="alloc-range" id="t${t}_range_${k}"></p>
             <div class="num-ctrl">
                 <button type="button" class="nudge" onclick="nudgeAlloc(${t}, '${k}', -5)" aria-label="${label} 5%p 줄이기">-</button>
-                <input type="number" id="t${t}_p_${k}" value="${v.alloc[i]}" min="0" max="100" inputmode="numeric" oninput="previewAllocation(${t})">
+                <input type="number" id="t${t}_p_${k}" value="${v.alloc ? v.alloc[i] : ''}" min="0" max="100" inputmode="numeric" oninput="previewAllocation(${t})">
                 <span>%</span>
                 <button type="button" class="nudge" onclick="nudgeAlloc(${t}, '${k}', 5)" aria-label="${label} 5%p 늘리기">+</button>
             </div>
@@ -847,6 +855,7 @@ function turnPageHtml(t) {
             ${stepHead(2, '자산 배분')}
             <p class="avail">투자 가능 여유 자금 <strong id="t${t}_avail">-</strong><small>1단계 결과 반영</small></p>
             <p id="t${t}_debt" class="warning">여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
+            ${t > 1 ? `<p class="sub-note">지난 턴에 확정한 비율에서 예금·주식·채권 각각 ±${ALLOC_LIMIT}%p까지만 바꿀 수 있습니다.</p>` : ''}
             <div class="alloc">${allocItems}</div>
             <p id="t${t}_warn" class="warning">각 비율은 0 이상이고, 합이 100%가 되어야 합니다!</p>
             <p class="alloc-preview" id="t${t}_alloc_preview"></p>
@@ -1023,8 +1032,8 @@ function refreshTurn(turn) {
 function loanRateInfo(turn) {
     const prev = records[turn - 1];
     const base = prev ? prev.scenario.dep : LOAN.firstTurnBase;
-    const basis = prev ? `직전 ${turn - 1}턴 시나리오 ${prev.scenarioNo}(${prev.scenario.name}) 금리 ${base}%` : `1턴은 직전 턴이 없어 기본 금리 ${base}%`;
-    return { rate: base + LOAN.spread, base, basis };
+    const basis = prev ? `직전 ${turn - 1}턴 시나리오 ${prev.scenarioNo}(${prev.scenario.name})의 예금금리 ${base}%` : `1턴은 직전 턴이 없어 기본 금리 ${base}%`;
+    return { rate: base, base, basis };
 }
 const readLoan = turn => Number(document.getElementById(`t${turn}_loan`).value || 0);
 
@@ -1063,16 +1072,29 @@ function stepLoan(turn, dir) {
 
 const readAllocation = turn => ({ dep: readNum(`t${turn}_p_dep`), stk: readNum(`t${turn}_p_stk`), bnd: readNum(`t${turn}_p_bnd`) });
 const validAllocation = p => Math.abs(p.dep + p.stk + p.bnd - 100) < 1e-9 && Math.min(p.dep, p.stk, p.bnd) >= 0;
+// 2턴부터 자산 배분은 지난 턴에 확정한 비율에서 종목마다 ±ALLOC_LIMIT%p까지만 바꿀 수 있음
+const ALLOC_LIMIT = 10;
+const allocRange = (turn, k) => {
+    const prev = records[turn - 1];
+    if (!prev || !prev.p) return { min: 0, max: 100 };
+    return { min: Math.max(0, prev.p[k] - ALLOC_LIMIT), max: Math.min(100, prev.p[k] + ALLOC_LIMIT), prev: prev.p[k] };
+};
+const withinAllocRange = (turn, p) => ASSETS.every(([k]) => {
+    const r = allocRange(turn, k);
+    return p[k] >= r.min - 1e-9 && p[k] <= r.max + 1e-9;
+});
+const allocRangeText = turn => ASSETS.map(([k, label]) => `${label} ${allocRange(turn, k).min}~${allocRange(turn, k).max}%`).join(', ');
 // 여유 자금이 마이너스면 투자 없이 부채로 이월
 const investAmounts = (avail, p) => {
     const investable = Math.max(avail, 0);
     return { dep: Math.round(investable * p.dep / 100), stk: Math.round(investable * p.stk / 100), bnd: Math.round(investable * p.bnd / 100) };
 };
 
-// 자산 배분 -/+ 버튼: 5%p씩
+// 자산 배분 -/+ 버튼: 5%p씩 (2턴부터는 허용 범위 안에서만)
 function nudgeAlloc(turn, k, d) {
     const el = document.getElementById(`t${turn}_p_${k}`);
-    el.value = Math.min(100, Math.max(0, (parseFloat(el.value) || 0) + d));
+    const r = allocRange(turn, k);
+    el.value = Math.min(r.max, Math.max(r.min, (parseFloat(el.value) || 0) + d));
     previewAllocation(turn);
 }
 
@@ -1080,9 +1102,22 @@ function nudgeAlloc(turn, k, d) {
 function previewAllocation(turn) {
     const rec = records[turn];
     const p = rec && rec.p ? rec.p : readAllocation(turn);
-    document.getElementById(`t${turn}_warn`).style.display = validAllocation(p) ? 'none' : 'block';
+    const sumOk = validAllocation(p);
+    const rangeOk = withinAllocRange(turn, p);
+    const warnEl = document.getElementById(`t${turn}_warn`);
+    warnEl.style.display = sumOk && rangeOk ? 'none' : 'block';
+    warnEl.innerText = !sumOk ? '각 비율은 0 이상이고, 합이 100%가 되어야 합니다!'
+        : `지난 턴 비율에서 ±${ALLOC_LIMIT}%p까지만 바꿀 수 있습니다! (${allocRangeText(turn)})`;
     ASSETS.forEach(([k]) => {
-        document.getElementById(`t${turn}_g_${k}`).style.setProperty('--pct', Math.min(100, Math.max(0, p[k])));
+        const gauge = document.getElementById(`t${turn}_g_${k}`);
+        const r = allocRange(turn, k);
+        gauge.style.setProperty('--pct', Math.min(100, Math.max(0, p[k])));
+        gauge.style.setProperty('--min', r.min);
+        gauge.style.setProperty('--max', r.max);
+        const input = document.getElementById(`t${turn}_p_${k}`);
+        input.min = r.min;
+        input.max = r.max;
+        setText(`t${turn}_range_${k}`, r.prev === undefined ? '' : `지난 턴 ${r.prev}% → ${r.min}~${r.max}%`);
     });
 
     const availEl = document.getElementById(`t${turn}_avail`);
@@ -1095,7 +1130,7 @@ function previewAllocation(turn) {
     const total = l.invested + l.cash;
     const interest = loanInterest(total, lr.rate);
     setText(`t${turn}_loan_rate`, `이번 턴 금리 ${lr.rate}%`);
-    const basis = `<p>금리 근거: ${lr.basis} + 은행 가산금리 ${LOAN.spread}%p = ${lr.rate}%</p>`;
+    const basis = `<p>금리 근거: ${lr.basis}</p>`;
     document.getElementById(`t${turn}_loan_info`).innerHTML = stageOf(turn) >= 4
         ? basis + `<p>${total ? `이번 턴 대출 ${fmt(total)}만 원, 원금과 이자 ${fmt(total + interest)}만 원 <strong>상환 완료</strong>` : '이번 턴에는 대출을 받지 않았습니다.'}</p>`
         : basis +
@@ -1334,6 +1369,10 @@ function confirmAllocation(turn) {
         alert("자산 배분 비율은 0 이상이고, 합이 100%가 되어야 합니다!");
         return;
     }
+    if (!withinAllocRange(turn, p)) {
+        alert(`지난 턴 비율에서 종목마다 ±${ALLOC_LIMIT}%p까지만 바꿀 수 있습니다!\n${allocRangeText(turn)}`);
+        return;
+    }
     const loanInvested = loanOf(turn).invested;  // 배분 확정 전에 빌린 돈은 함께 투자
     const funds = rec.avail + loanInvested;
     Object.assign(rec, { stage: 2, p, loanInvested, inv: investAmounts(funds, p), debt: Math.min(funds, 0) });
@@ -1386,6 +1425,20 @@ function completeTurn(turn) {
     const tab = document.getElementById(`tab${turn}`);
     tab.classList.remove('next-ready');
     tab.classList.add('completed');
+    // 4턴을 모두 마치기 전에는 끝낸 턴으로 돌아갈 수 없음 (마치면 모든 턴을 다시 볼 수 있음)
+    if (turn < 4) {
+        tab.disabled = true;
+        tab.title = '4턴까지 모두 마친 뒤에 다시 볼 수 있어요';
+    } else {
+        for (let t = 1; t <= 4; t++) {
+            const doneTab = document.getElementById(`tab${t}`);
+            doneTab.disabled = false;
+            doneTab.removeAttribute('title');
+        }
+    }
+
+    // 다음 턴 자산 배분은 이번 턴에 확정한 비율에서 시작
+    if (turn < 4) ASSETS.forEach(([k]) => { document.getElementById(`t${turn + 1}_p_${k}`).value = rec.p[k]; });
 
     const nextTab = document.getElementById(`tab${turn + 1}`);
     nextTab.style.display = '';
@@ -1595,7 +1648,7 @@ function renderFinalResult(turn) {
         대출로 얻은 순효과는 <span class="${toneClass(loanNet)}">${signed(loanNet)}만 원</span>이에요.
         (${loanNet >= 0 ? '번 돈이 이자보다 커서 이득' : '번 돈이 이자보다 작아 손해'})</p>` : '';
     const nextHint = turn < 4
-        ? `화면 위의 [${turn + 1}턴] 칸을 눌러 다음 턴(${config[turn + 1].name})으로 넘어가세요!`
+        ? `화면 위의 [${turn + 1}턴] 칸을 눌러 다음 턴(${config[turn + 1].name})으로 넘어가세요! 넘어가면 4턴을 마칠 때까지 이 턴으로 돌아올 수 없어요.`
         : '화면 위의 [최종 결과] 칸을 눌러 최종 리포트를 확인하세요!';
 
     const el = document.getElementById(`t${turn}_result`);
@@ -1708,6 +1761,7 @@ function initGame() {
         btn.classList.remove('completed', 'next-ready');
         btn.classList.toggle('locked', idx >= 1 && idx <= 3);
         btn.disabled = idx > 0;
+        btn.removeAttribute('title');
     });
     document.getElementById('tab5').style.display = 'none';
 
