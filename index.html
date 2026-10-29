@@ -108,6 +108,17 @@
         .step.done .choice-card:hover { border-color: var(--border); }
         .step.done .choice-card.selected:hover { border-color: var(--primary); }
         .alloc-preview { margin: 8px 0 0; font-weight: bold; color: var(--primary); }
+        .loan-box { margin: 12px 0 16px; padding: 12px 14px; border: 1px dashed var(--primary); border-radius: 10px; background: #f8fbff; }
+        .loan-head { font-weight: bold; margin-bottom: 8px; }
+        .loan-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-weight: bold; }
+        .loan-row input[type="number"] { width: 120px; padding: 6px 8px; font-size: 0.95rem; }
+        .loan-rate { color: var(--primary); }
+        .btn-loan { padding: 7px 14px; border: none; border-radius: 6px; background: var(--primary); color: #fff; font-weight: bold; cursor: pointer; }
+        .btn-loan:hover { background: var(--primary-hover); }
+        .btn-loan:disabled { background: #94a3b8; cursor: default; }
+        .loan-info { margin-top: 6px; font-size: 0.88rem; color: #475569; line-height: 1.6; }
+        .loan-info.down { color: var(--danger); font-weight: bold; }
+        .loan-effect { margin: 10px 0 0; padding: 10px 12px; border-left: 4px solid var(--primary); background: #eff6ff; border-radius: 4px; font-size: 0.92rem; line-height: 1.6; }
         .scenario-card { margin-top: 12px; padding: 12px 14px; border: 2px solid var(--accent); border-radius: 10px; background: #fffbeb; font-weight: bold; font-size: 1.05rem; }
         .scenario-rates { margin-top: 4px; font-size: 0.92rem; color: #92400e; }
         .why-meta { font-size: 0.95rem; line-height: 1.7; }
@@ -177,6 +188,9 @@
         .total-box .total-value { font-size: 2.2rem; font-weight: 800; color: #15803d; margin: 4px 0 6px; }
         .total-box .total-diff { font-weight: bold; margin-bottom: 8px; }
         .total-box .total-breakdown { font-size: 0.88rem; color: #475569; }
+        .total-box.negative { border-color: var(--danger); background: linear-gradient(135deg, #fef2f2, #fff7ed); }
+        .total-box.negative .total-value { color: var(--danger); }
+        .debt-note { margin: 0 0 8px; color: var(--danger); font-weight: bold; }
         .next-hint {
             text-align: center; font-weight: bold; color: #b45309; background: #fffbeb;
             border: 2px dashed var(--accent); border-radius: 10px; padding: 14px; font-size: 1.05rem;
@@ -218,7 +232,7 @@
     <p class="rule-note">
         진행 순서: <strong>STEP 1 선택 완료 → STEP 2 자산 배분 확정 → STEP 3 시나리오(1~5) 선택 → STEP 4 최종 완료</strong><br>
         🎲 선택 사항의 금액과 이익/손실 여부는 <strong>선택 완료를 눌러야 공개</strong>되고, 끝낸 단계는 되돌릴 수 없습니다.<br>
-        최종 완료 후 <strong>화면 위의 다음 턴 탭</strong>을 눌러 넘어가세요.
+        🏦 대출은 단계와 상관없이 언제든 받을 수 있습니다. 최종 완료 후 <strong>화면 위의 다음 턴 탭</strong>을 눌러 넘어가세요.
     </p>
 
     <!-- 턴 선택 탭 -->
@@ -238,6 +252,17 @@
                 연봉: <strong id="t1_salary_txt">0</strong> 만 원<span id="t1_salary_diff"></span> │
                 10년 누적 잉여 자금: <strong id="t1_surplus_txt">0</strong> 만 원 <span id="t1_surplus_detail" class="sub-note"></span>
             </p>
+
+            <!-- 대출: 단계와 상관없이 언제든 바로 받을 수 있음 -->
+            <div class="loan-box">
+                <div class="loan-head">🏦 대출 <span class="sub-note">단계와 상관없이 언제든 바로 대출 · 한도 3억 원 · 1,000만 원 단위 · 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져감</span></div>
+                <div class="loan-row">
+                    <input type="number" id="t1_loan" min="0" max="30000" step="1000" value="1000"> 만 원
+                    <button class="btn-loan" id="t1_btn_loan" onclick="takeLoan(1)">대출 받기</button>
+                    <span class="loan-rate" id="t1_loan_rate"></span>
+                </div>
+                <div class="loan-info" id="t1_loan_info"></div>
+            </div>
 
             <!-- STEP 1: 지출과 선택 -->
             <div class="step" id="t1_step1">
@@ -266,6 +291,7 @@
                     <span class="sub-note">(STEP 1 결과 반영)</span>
                 </div>
                 <p id="t1_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
+
 
                 <div class="grid">
                     <div><label>예금 (%)</label><input type="number" id="t1_p_dep" value="40" oninput="previewAllocation(1)"></div>
@@ -332,6 +358,17 @@
                 10년 잉여 자금: <strong id="t2_surplus_txt">0</strong> 만 원 <span id="t2_surplus_detail" class="sub-note"></span>
             </p>
 
+            <!-- 대출: 단계와 상관없이 언제든 바로 받을 수 있음 -->
+            <div class="loan-box">
+                <div class="loan-head">🏦 대출 <span class="sub-note">단계와 상관없이 언제든 바로 대출 · 한도 3억 원 · 1,000만 원 단위 · 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져감</span></div>
+                <div class="loan-row">
+                    <input type="number" id="t2_loan" min="0" max="30000" step="1000" value="1000"> 만 원
+                    <button class="btn-loan" id="t2_btn_loan" onclick="takeLoan(2)">대출 받기</button>
+                    <span class="loan-rate" id="t2_loan_rate"></span>
+                </div>
+                <div class="loan-info" id="t2_loan_info"></div>
+            </div>
+
             <!-- STEP 1: 지출과 선택 -->
             <div class="step" id="t2_step1">
                 <div class="step-head"><span class="step-label">STEP 1</span> 지출과 선택 <span class="step-status" id="t2_status1"></span></div>
@@ -356,6 +393,7 @@
                     <span class="sub-note">(STEP 1 결과 반영)</span>
                 </div>
                 <p id="t2_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
+
 
                 <div class="grid">
                     <div><label>예금 (%)</label><input type="number" id="t2_p_dep" value="40" oninput="previewAllocation(2)"></div>
@@ -422,6 +460,17 @@
                 10년 잉여 자금: <strong id="t3_surplus_txt">0</strong> 만 원 <span id="t3_surplus_detail" class="sub-note"></span>
             </p>
 
+            <!-- 대출: 단계와 상관없이 언제든 바로 받을 수 있음 -->
+            <div class="loan-box">
+                <div class="loan-head">🏦 대출 <span class="sub-note">단계와 상관없이 언제든 바로 대출 · 한도 3억 원 · 1,000만 원 단위 · 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져감</span></div>
+                <div class="loan-row">
+                    <input type="number" id="t3_loan" min="0" max="30000" step="1000" value="1000"> 만 원
+                    <button class="btn-loan" id="t3_btn_loan" onclick="takeLoan(3)">대출 받기</button>
+                    <span class="loan-rate" id="t3_loan_rate"></span>
+                </div>
+                <div class="loan-info" id="t3_loan_info"></div>
+            </div>
+
             <!-- STEP 1: 지출과 선택 -->
             <div class="step" id="t3_step1">
                 <div class="step-head"><span class="step-label">STEP 1</span> 지출과 선택 <span class="step-status" id="t3_status1"></span></div>
@@ -446,6 +495,7 @@
                     <span class="sub-note">(STEP 1 결과 반영)</span>
                 </div>
                 <p id="t3_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
+
 
                 <div class="grid">
                     <div><label>예금 (%)</label><input type="number" id="t3_p_dep" value="30" oninput="previewAllocation(3)"></div>
@@ -512,6 +562,17 @@
                 10년 잉여 자금: <strong id="t4_surplus_txt">0</strong> 만 원 <span id="t4_surplus_detail" class="sub-note"></span>
             </p>
 
+            <!-- 대출: 단계와 상관없이 언제든 바로 받을 수 있음 -->
+            <div class="loan-box">
+                <div class="loan-head">🏦 대출 <span class="sub-note">단계와 상관없이 언제든 바로 대출 · 한도 3억 원 · 1,000만 원 단위 · 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져감</span></div>
+                <div class="loan-row">
+                    <input type="number" id="t4_loan" min="0" max="30000" step="1000" value="1000"> 만 원
+                    <button class="btn-loan" id="t4_btn_loan" onclick="takeLoan(4)">대출 받기</button>
+                    <span class="loan-rate" id="t4_loan_rate"></span>
+                </div>
+                <div class="loan-info" id="t4_loan_info"></div>
+            </div>
+
             <!-- STEP 1: 지출과 선택 -->
             <div class="step" id="t4_step1">
                 <div class="step-head"><span class="step-label">STEP 1</span> 지출과 선택 <span class="step-status" id="t4_status1"></span></div>
@@ -535,6 +596,7 @@
                     <span class="sub-note">(STEP 1 결과 반영)</span>
                 </div>
                 <p id="t4_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
+
 
                 <div class="grid">
                     <div><label>예금 (%)</label><input type="number" id="t4_p_dep" value="60" oninput="previewAllocation(4)"></div>
@@ -738,6 +800,11 @@ const scenarioNews = {
 };
 const ASSETS = [['dep', '🏦 예금'], ['stk', '📈 주식'], ['bnd', '📜 채권']];
 
+// 대출: 한도 3억, 1,000만 원 단위, 그 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져감
+// 금리 = 직전 턴 시나리오의 금리(예금 이자율) + 은행 가산금리 / 1턴은 직전 턴이 없어 기본 금리를 씀
+// 게임의 자산 수익률이 턴마다 한 번 적용되는 것처럼, 대출 이자도 턴 전체에 한 번 적용
+const LOAN = { max: 30000, step: 1000, spread: 2, firstTurnBase: 3 };
+
 // 턴별 기본 설정 (금액 단위: 만 원 / income·expense는 월 기준, 10년 잉여 자금 = (월 소득 - 월 생활비) × 120개월)
 const config = {
     1: { name: "1턴 (25~34세)", startAge: 25, income: 350, expense: 200, req: 8000, reqLabel: '결혼 및 전세 보증금' },   // 기본 잉여 18,000
@@ -789,20 +856,18 @@ const sideJob = {
 
 // 턴별 선택 사항 (수정사항: 선택지 2~3개로 확장 & 결과 비공개)
 // outcomes: 선택 완료 시 확률(prob, %)에 따라 하나가 정해짐 / luck: 🎲 운 요소 (턴마다 1개, 거는 돈으로 성공 확률·금액이 정해짐)
-// cash: 정산되는 금액 (만 원) / salary: 연봉 변화율 (%)
+// 일반 선택지(운 요소 제외)는 비용(cost)이 들지만 그보다 큰 이익(gain: 수익, salary: 연봉 상승률 %)이 생김
+// cash: 정산되는 금액 (만 원) / salaryMonths: 이번 턴에 연봉 상승을 적용하는 기간 (기본은 후반 5년)
 const choices = {
     1: [
         { icon: '🎓', title: '대학원 진학·전문 자격증 취득', hint: '학비와 시간이 들지만, 몸값이 달라질 수도 있습니다.',
           outcomes: [
-            { prob: 50, desc: '취득 성공! 전문성을 인정받아 연봉 협상에 성공했습니다.', cash: -3000, salary: 5 },
-            { prob: 30, desc: '취득은 했지만 회사의 인정이 기대보다 적어 연봉이 조금만 올랐습니다.', cash: -3000, salary: 4 },
-            { prob: 20, desc: '업무와 병행하다 중도 포기… 학비만 날렸습니다.', cash: -2000, salary: 0 }
+            { prob: 60, desc: '학비가 들었지만 자격증을 따서 전문성을 인정받고 연봉이 올랐습니다.', cost: 3000, salary: 5 },
+            { prob: 40, desc: '학비가 들었지만 자격증을 따서 연봉이 올랐습니다. (기대보다는 조금 덜 올랐어요)', cost: 3000, salary: 4 }
           ] },
         { icon: '🚗', title: '신차 구입', hint: '출퇴근과 생활이 편해지고 활동 반경이 넓어집니다.',
           outcomes: [
-            { prob: 60, desc: '무사고로 잘 탔지만 차값은 꾸준히 떨어졌습니다. (감가상각·유지비)', cash: -3000, salary: 0 },
-            { prob: 25, desc: '외근·영업에 차를 적극 활용해 실적이 올랐습니다.', cash: -3000, salary: 2 },
-            { prob: 15, desc: '접촉 사고 발생! 수리비에 보험료 할증까지 겹쳤습니다.', cash: -4500, salary: 0 }
+            { prob: 100, desc: '차값과 유지비가 들었지만, 외근·영업에 차를 적극 활용해 실적이 올랐습니다.', cost: 3000, salary: 2 }
           ] },
         { icon: '🚀', title: '스타트업 이직', hint: '안정성은 낮지만, 회사가 성장한다면 기회가 클 수도 있습니다.',
           luck: {
@@ -814,15 +879,11 @@ const choices = {
     2: [
         { icon: '🏠', title: '내집 마련 (주택담보대출 활용)', hint: '전세살이를 끝내고 내 집을 삽니다. 집값과 금리가 관건입니다.',
           outcomes: [
-            { prob: 40, desc: '집값이 크게 올라 시세 차익이 생겼습니다!', cash: 10000, salary: 0 },
-            { prob: 35, desc: '집값은 제자리, 대출 이자만 꾸준히 나갔습니다.', cash: -3000, salary: 0 },
-            { prob: 25, desc: '금리 급등에 집값까지 하락… 이자 부담이 커졌습니다.', cash: -9000, salary: 0 }
+            { prob: 100, desc: '대출 이자와 취득세가 들었지만, 집값이 올라 시세 차익이 생겼습니다.', cost: 4000, gain: 10000 }
           ] },
         { icon: '💼', title: '승진 도전 (야근·사내 MBA)', hint: '회사에 모든 것을 걸어 봅니다. 대신 건강과 가족 시간은 줄어듭니다.',
           outcomes: [
-            { prob: 50, desc: '팀장 승진 성공! 연봉이 크게 올랐습니다.', cash: -500, salary: 15 },
-            { prob: 30, desc: '승진은 미끄러졌지만 성과급을 조금 받았습니다.', cash: 500, salary: 3 },
-            { prob: 20, desc: '과로로 번아웃… 병원비가 들고 휴직으로 연봉이 줄었습니다.', cash: -2500, salary: -5 }
+            { prob: 100, desc: '야근과 사내 MBA 학비가 들었지만, 팀장으로 승진해 연봉이 올랐습니다.', cost: 2000, salary: 5 }
           ] },
         { icon: '🪙', title: '지인 추천 고수익 투자 (코인·비상장주)', hint: '"이번엔 진짜야, 몇 배는 오른대!" 친한 친구의 권유입니다.',
           luck: {
@@ -837,9 +898,7 @@ const choices = {
     3: [
         { icon: '👵', title: '부모 부양 및 의료비 지원', hint: '연로하신 부모님의 생활비와 병원비를 지원합니다.',
           outcomes: [
-            { prob: 50, desc: '부모님이 건강을 회복하셔서 생활비 위주로 지원했습니다.', cash: -3000, salary: 0 },
-            { prob: 35, desc: '장기 입원과 간병으로 의료비가 크게 늘었습니다.', cash: -6000, salary: 0 },
-            { prob: 15, desc: '고마워하신 부모님이 시골 땅을 증여해 주셨습니다.', cash: 3000, salary: 0 }
+            { prob: 100, desc: '부모님의 생활비와 병원비를 지원했고, 고마워하신 부모님이 시골 땅을 증여해 주셨습니다.', cost: 4000, gain: 6000 }
           ] },
         { icon: '🏪', title: '퇴직 대비 프랜차이즈 가게 창업', hint: '퇴직 후를 대비해 미리 가게를 차려 봅니다.',
           luck: {
@@ -860,11 +919,13 @@ const choices = {
         // 자녀 지원: 결혼 지원금 5,000만 원은 한 번만 지출, 독립한 자녀가 부모에게 매달 100만 원 × 120개월(12,000만 원)을 보내 줌
         { icon: '💍', title: '자녀 독립 및 결혼 지원', hint: '자녀의 결혼 자금을 지원하고 독립시킵니다.',
           outcomes: [
-            { prob: 100, desc: '결혼 지원금 5,000만 원을 한 번 지원했고, 독립한 자녀가 매달 100만 원씩(10년간 +12,000만 원) 용돈을 보내 주었습니다.', cash: 7000, salary: 0 }
+            { prob: 100, desc: '결혼 지원금 5,000만 원을 한 번 지원했고, 독립한 자녀가 매달 100만 원씩(10년간) 용돈을 보내 주었습니다.', cost: 5000, gain: 12000 }
           ] },
+        // 정년 연장: 55세부터 바로 연봉이 올라 4턴 10년 전체에 적용 (후반 5년만 적용하면 비용을 회수하지 못함)
+        // 연봉 +12%: 스타트업 실패로 연봉이 10% 깎인 경우에도 비용(5,000만 원)보다 이익이 크도록
         { icon: '🔧', title: '정년 연장·재취업 준비 (기술 자격증)', hint: '은퇴 후에도 일할 수 있도록 새로운 기술을 배웁니다.',
           outcomes: [
-            { prob: 100, desc: '교육비 5,000만 원을 들여 기술을 익혔고, 정년이 연장되며 연봉이 10% 올랐습니다.', cash: -5000, salary: 10 }
+            { prob: 100, desc: '교육비 5,000만 원을 들여 기술을 익혔고, 55세부터 정년이 연장되며 연봉이 12% 올랐습니다.', cost: 5000, salary: 12, salaryMonths: 120 }
           ] },
         { icon: '🏢', title: '노후 대비 상가(수익형 부동산) 투자', hint: '월세를 받는 상가에 투자합니다. 결과는 운에 달려 있습니다.',
           luck: {
@@ -1007,7 +1068,11 @@ function turnBase(turn) {
 function refreshTurn(turn) {
     const cfg = config[turn];
     const b = turnBase(turn);
-    if (turn > 1) setText(`t${turn}_prev_txt`, fmt(b.carry));
+    if (turn > 1) {
+        const prevEl = document.getElementById(`t${turn}_prev_txt`);
+        prevEl.innerText = b.carry < 0 ? `빚 ${fmt(-b.carry)}` : fmt(b.carry);
+        prevEl.style.color = b.carry < 0 ? 'var(--danger)' : '';
+    }
     setText(`t${turn}_salary_txt`, fmt(b.salary));
     const multPct = (b.mult - 1) * 100;
     document.getElementById(`t${turn}_salary_diff`).innerHTML = Math.abs(multPct) >= 0.05
@@ -1024,6 +1089,41 @@ function refreshTurn(turn) {
     updateStepUI(turn);
     previewAllocation(turn);
 }
+
+// 이번 턴 대출 금리: 직전 턴에 정해진 금리를 반영
+function loanRateInfo(turn) {
+    const prev = records[turn - 1];
+    const base = prev ? prev.scenario.dep : LOAN.firstTurnBase;
+    const basis = prev ? `직전 ${turn - 1}턴 시나리오 ${prev.scenarioNo}(${prev.scenario.name}) 금리 ${base}%` : `1턴은 직전 턴이 없어 기본 금리 ${base}%`;
+    return { rate: base + LOAN.spread, base, basis };
+}
+const readLoan = turn => Number(document.getElementById(`t${turn}_loan`).value || 0);
+
+// 턴별 대출 현황: 자산 배분 확정 전에 빌린 돈은 투자, 확정 후에 빌린 돈은 현금으로 보관
+// (시나리오를 보고 나서 빌려 투자하는 것을 막기 위해)
+let loans = {};
+const loanOf = turn => (loans[turn] = loans[turn] || { invested: 0, cash: 0 });
+const loanTotal = turn => loanOf(turn).invested + loanOf(turn).cash;
+
+// 대출 받기: 누르는 즉시 반영, 빌린 돈은 턴이 끝날 때 한꺼번에 갚음 (중간 상환 없음)
+function takeLoan(turn) {
+    if (stageOf(turn) >= 4) return;
+    const amount = readLoan(turn);
+    if (!validLoan(amount) || amount === 0) {
+        alert("대출 금액은 1,000만 원 단위로 입력하세요! (한도 3억 원)");
+        return;
+    }
+    const remain = LOAN.max - loanTotal(turn);
+    if (amount > remain) {
+        alert(`대출 한도 3억 원을 넘을 수 없습니다. 남은 한도: ${fmt(remain)}만 원`);
+        return;
+    }
+    if (stageOf(turn) >= 2) loanOf(turn).cash += amount;
+    else loanOf(turn).invested += amount;
+    previewAllocation(turn);
+}
+const validLoan = loan => Number.isInteger(loan) && loan >= 0 && loan <= LOAN.max && loan % LOAN.step === 0;
+const loanInterest = (loan, rate) => Math.round(loan * rate / 100);
 
 const readAllocation = turn => ({ dep: readNum(`t${turn}_p_dep`), stk: readNum(`t${turn}_p_stk`), bnd: readNum(`t${turn}_p_bnd`) });
 const validAllocation = p => Math.abs(p.dep + p.stk + p.bnd - 100) < 1e-9 && Math.min(p.dep, p.stk, p.bnd) >= 0;
@@ -1042,11 +1142,28 @@ function previewAllocation(turn) {
     const availEl = document.getElementById(`t${turn}_avail`);
     availEl.innerText = rec ? fmt(rec.avail) : 'STEP 1 완료 후 계산';
     availEl.style.color = rec && rec.avail < 0 ? 'var(--danger)' : '#2563eb';
-    document.getElementById(`t${turn}_debt`).style.display = rec && rec.avail < 0 ? 'block' : 'none';
 
-    const inv = rec ? investAmounts(rec.avail, p) : null;
+    // 대출 현황 (단계와 상관없이 표시)
+    const lr = loanRateInfo(turn);
+    const l = loanOf(turn);
+    const total = l.invested + l.cash;
+    const interest = loanInterest(total, lr.rate);
+    setText(`t${turn}_loan_rate`, `이번 턴 대출 금리 ${lr.rate}%`);
+    document.getElementById(`t${turn}_loan_info`).innerHTML = stageOf(turn) >= 4
+        ? `금리 근거: ${lr.basis} + 은행 가산금리 ${LOAN.spread}%p = ${lr.rate}%<br>` +
+          (total ? `이번 턴 대출 ${fmt(total)}만 원 · 원금과 이자 ${fmt(total + interest)}만 원 <strong>상환 완료</strong>` : '이번 턴에는 대출을 받지 않았습니다.')
+        : `금리 근거: ${lr.basis} + 은행 가산금리 ${LOAN.spread}%p = ${lr.rate}%<br>` +
+        `현재 대출 <strong>${fmt(total)}만 원</strong> (남은 한도 ${fmt(LOAN.max - total)}만 원)` +
+        (total ? ` · 턴이 끝나면 원금 ${fmt(total)}만 + 이자 ${fmt(interest)}만 = <strong>${fmt(total + interest)}만 원</strong> 상환` : '') +
+        (stageOf(turn) < 2 ? '<br>자산 배분 확정 전에 빌린 돈은 투자 금액에 더해집니다.' : '') +
+        (l.cash ? `<br>※ 자산 배분 확정 후에 빌린 ${fmt(l.cash)}만 원은 투자되지 않고 현금으로 보관됩니다.` : '');
+
+    const loanInvested = rec && rec.stage >= 2 ? rec.loanInvested : l.invested;
+    const funds = rec ? rec.avail + loanInvested : 0;
+    document.getElementById(`t${turn}_debt`).style.display = rec && funds < 0 ? 'block' : 'none';
+    const inv = rec ? investAmounts(funds, p) : null;
     setText(`t${turn}_alloc_preview`, inv && validAllocation(p)
-        ? `→ 예금 ${fmt(inv.dep)}만 · 주식 ${fmt(inv.stk)}만 · 채권 ${fmt(inv.bnd)}만 원 투자` : '');
+        ? `→ 예금 ${fmt(inv.dep)}만 · 주식 ${fmt(inv.stk)}만 · 채권 ${fmt(inv.bnd)}만 원 투자` + (loanInvested ? ` (대출 ${fmt(loanInvested)}만 원 포함)` : '') : '');
     ASSETS.forEach(([k]) => {
         setText(`t${turn}_inv_${k}`, inv ? `${fmt(inv[k])}만 원` : 'STEP 1 완료 후');
         setText(`t${turn}_rate_${k}`, rec && rec.r ? `${rec.r[k] > 0 ? '+' : ''}${rec.r[k]}%` : '시나리오 공개 후');
@@ -1075,6 +1192,8 @@ function updateStepUI(turn) {
     document.querySelectorAll(`#t${turn}_step1 input:not([data-fixed])`).forEach(el => el.disabled = stage >= 1);
     if (stage === 0) updateChoiceAvailability(turn);
     ASSETS.forEach(([k]) => { document.getElementById(`t${turn}_p_${k}`).disabled = stage !== 1; });
+    document.getElementById(`t${turn}_loan`).disabled = stage >= 4;
+    document.getElementById(`t${turn}_btn_loan`).disabled = stage >= 4;
     document.getElementById(`t${turn}_sc`).disabled = stage < 2 || stage >= 4;
 
     [
@@ -1106,7 +1225,31 @@ function childOutcome(spec, salary) {
         desc: `둘째가 태어났습니다! 육아비(연봉의 ${spec.costRate}% × ${spec.years}년) ${signed(-cost)}만 원이 들었지만, 
             국가 지원으로 육아비의 ${spec.subsidyRate}%인 ${signed(subsidy)}만 원을 받았습니다.`,
         cash: subsidy - cost,
-        salary: 0
+        salary: 0,
+        general: { cost, gain: subsidy, salary: 0, projected: 0, net: subsidy - cost }
+    };
+}
+
+// 연봉 상승으로 64세까지 늘어나는 소득 (예상): 이번 턴 적용 기간 + 다음 턴들 10년씩, 이후 다른 변화가 없다고 가정
+function projectedSalaryGain(turn, mult, pct, months) {
+    let gain = config[turn].income * mult * pct / 100 * months;
+    for (let t = turn + 1; t <= 4; t++) gain += config[t].income * mult * pct / 100 * 120;
+    return Math.round(gain);
+}
+
+// 일반 선택지 정산: 비용이 들지만 수익이나 연봉 상승으로 그 이상을 돌려받음 (연봉 상승은 64세까지의 예상 소득으로 계산)
+function generalOutcome(o, salary, turn) {
+    const mult = salary / (config[turn].income * 12);
+    const pct = o.salary || 0;
+    const salaryMonths = o.salaryMonths || SALARY_APPLY_MONTHS;
+    const gain = o.gain || 0;
+    const projected = pct ? projectedSalaryGain(turn, mult, pct, salaryMonths) : 0;
+    return {
+        ...o,
+        cash: gain - o.cost,
+        salary: pct,
+        salaryMonths,
+        general: { cost: o.cost, gain, salary: pct, projected, net: gain - o.cost + projected }
     };
 }
 
@@ -1145,7 +1288,10 @@ function sideJobOutcome(o, salary, turn) {
 
 // 임원 승진·부업처럼 연봉에 따라 금액이 정해지는 결과는 따로 계산
 const expandOutcome = (choice, o, salary, turn) =>
-    choice.exec ? execOutcome(o, salary, turn) : (choice.sideJob ? sideJobOutcome(o, salary, turn) : { ...o });
+    choice.exec ? execOutcome(o, salary, turn)
+    : choice.sideJob ? sideJobOutcome(o, salary, turn)
+    : o.cost !== undefined ? generalOutcome(o, salary, turn)
+    : { ...o };
 
 // 선택 사항 결과 결정
 // - 운 요소(luck): 거는 돈으로 성공 확률을 정해 추첨, 금전 결과 = 1억 기준 금액 × (거는 돈 / 1억), 성공 시 최소 건 돈 보장
@@ -1200,10 +1346,16 @@ function completeChoices(turn) {
     }));
 
     const choiceCash = picks.reduce((sum, pk) => sum + pk.outcome.cash, 0);
-    const multAfter = picks.reduce((m, pk) => m * (1 + pk.outcome.salary / 100), b.mult);
-    const monthlyAfter = cfg.income * multAfter;
+    // 연봉 변화는 선택마다 차례로 반영 (이번 턴 적용 기간은 기본 후반 5년, 선택에 따라 다를 수 있음)
+    let monthlyAfter = b.monthly, salaryIncome = 0;
+    picks.forEach(({ outcome }) => {
+        const raise = monthlyAfter * outcome.salary / 100;
+        salaryIncome += raise * (outcome.salaryMonths || SALARY_APPLY_MONTHS);
+        monthlyAfter += raise;
+    });
+    const multAfter = monthlyAfter / cfg.income;
     const salaryAfter = Math.round(monthlyAfter * 12);
-    const salaryIncomeDelta = Math.round((monthlyAfter - b.monthly) * SALARY_APPLY_MONTHS);
+    const salaryIncomeDelta = Math.round(salaryIncome);
 
     // 가정 형태 정산: 맞벌이는 배우자 소득 추가, 육아비는 기준 금액의 일정 비율
     const hhYears = HOUSEHOLD_YEARS[turn];
@@ -1235,7 +1387,9 @@ function confirmAllocation(turn) {
         alert("자산 배분 비율은 0 이상이고, 합이 100%가 되어야 합니다!");
         return;
     }
-    Object.assign(rec, { stage: 2, p, inv: investAmounts(rec.avail, p), debt: Math.min(rec.avail, 0) });
+    const loanInvested = loanOf(turn).invested;  // 배분 확정 전에 빌린 돈은 함께 투자
+    const funds = rec.avail + loanInvested;
+    Object.assign(rec, { stage: 2, p, loanInvested, inv: investAmounts(funds, p), debt: Math.min(funds, 0) });
     updateStepUI(turn);
     previewAllocation(turn);
 }
@@ -1267,9 +1421,15 @@ function applyScenario(turn) {
 function completeTurn(turn) {
     const rec = records[turn];
     if (!rec || rec.stage !== 3) return;
-    rec.final = rec.investFinal;
+    const l = loanOf(turn);
+    const loanRate = loanRateInfo(turn);
+    const loan = l.invested + l.cash;
+    Object.assign(rec, { loan, loanCash: l.cash, loanRate, loanInterest: loanInterest(loan, loanRate.rate) });
+    // 턴이 끝나면 은행이 대출 원금과 이자를 가져감 (확정 후 빌려 현금으로 둔 돈은 투자 결과에 더함)
+    rec.final = rec.investFinal + rec.loanCash - rec.loan - rec.loanInterest;
     rec.stage = 4;
     updateStepUI(turn);
+    previewAllocation(turn);
     renderFinalResult(turn);
 
     const tab = document.getElementById(`tab${turn}`);
@@ -1284,10 +1444,24 @@ function completeTurn(turn) {
 }
 
 function verdict(o) {
+    if (o.general) {
+        if (o.general.net > 0) return { cls: 'gain', text: '이익' };
+        return o.general.net < 0 ? { cls: 'loss', text: '손실' } : { cls: '', text: '변화 없음' };
+    }
     if (o.cash === 0 && o.salary === 0) return { cls: '', text: '변화 없음' };
     if (o.cash >= 0 && o.salary >= 0) return { cls: 'gain', text: '이익' };
     if (o.cash <= 0 && o.salary <= 0) return { cls: 'loss', text: '손실' };
     return { cls: 'mixed', text: '이익 + 손실' };
+}
+
+// 일반 선택지 결과: 비용과 이익(수익·연봉 상승)을 나눠서 표시
+function generalNums(g) {
+    return [
+        `<span>💸 비용: <strong class="down">${signed(-g.cost)}만 원</strong></span>`,
+        g.gain ? `<span>💰 수익: <strong class="up">${signed(g.gain)}만 원</strong></span>` : '',
+        g.salary ? `<span>📈 연봉: <strong class="up">+${g.salary}%</strong> <span class="sub-note">(64세까지 소득 +${fmt(g.projected)}만 원 예상)</span></span>` : '',
+        `<span>✅ 순이익: <strong class="${toneClass(g.net)}">${signed(g.net)}만 원${g.salary ? ' (예상)' : ''}</strong></span>`
+    ].join('');
 }
 
 // STEP 1 결과 발표: ① 선택 결과 → ② 선택에 따른 연봉 변화 → ③ 필수·선택에 따른 금액 변화 설명
@@ -1302,8 +1476,9 @@ function renderChoiceResult(turn) {
             <div class="outcome-desc">${outcome.desc}</div>
             ${outcome.luck ? `<div class="outcome-luck">${luckLine(outcome)}</div>` : ''}
             <div class="outcome-nums">
+                ${outcome.general ? generalNums(outcome.general) : `
                 <span>💰 금전: <strong class="${toneClass(outcome.cash)}">${outcome.cash ? signed(outcome.cash) + '만 원' : '변화 없음'}</strong></span>
-                <span>💼 연봉: <strong class="${toneClass(outcome.salaryText ? outcome.salaryTone : outcome.salary)}">${outcome.salaryText || (outcome.salary ? (outcome.salary > 0 ? '+' : '') + outcome.salary + '%' : '변화 없음')}</strong></span>
+                <span>💼 연봉: <strong class="${toneClass(outcome.salaryText ? outcome.salaryTone : outcome.salary)}">${outcome.salaryText || (outcome.salary ? (outcome.salary > 0 ? '+' : '') + outcome.salary + '%' : '변화 없음')}</strong></span>`}
             </div>
         </div>`;
     }).join('') : '<p class="muted">이번 턴에는 선택한 항목이 없습니다.</p>';
@@ -1356,7 +1531,7 @@ function renderChoiceResult(turn) {
             ${householdLine}
             ${pickSalaryLines}
             <li>${salaryStatus}</li>
-            <li>연봉 변화에 따른 이번 턴 소득 증감 (후반 5년): <strong class="${toneClass(rec.salaryIncomeDelta)}">${signed(rec.salaryIncomeDelta)}만 원</strong></li>
+            <li>연봉 변화에 따른 이번 턴 소득 증감: <strong class="${toneClass(rec.salaryIncomeDelta)}">${signed(rec.salaryIncomeDelta)}만 원</strong></li>
             <li>${nextLine}</li>
         </ul>`;
 
@@ -1368,9 +1543,12 @@ function renderChoiceResult(turn) {
     ];
     if (hh) flowRows.push([`${hh.icon} [가정] ${hh.title} (${hh.dualIncome ? `배우자 소득 ${signed(hh.spouseIncome)}만, ` : ''}육아비 ${signed(-hh.childcare)}만)`, hh.net, true]);
     rec.picks.forEach(({ choice, outcome }) => {
-        flowRows.push([`${choice.icon} [선택] ${choice.title}${outcome.luck ? ` (${outcome.luck.success ? '성공' : '실패'})` : ''}`, outcome.cash, true]);
+        const g = outcome.general;
+        const detail = outcome.luck ? ` (${outcome.luck.success ? '성공' : '실패'})`
+            : g ? ` (비용 ${signed(-g.cost)}만${g.gain ? `, 수익 ${signed(g.gain)}만` : ''})` : '';
+        flowRows.push([`${choice.icon} [선택] ${choice.title}${detail}`, outcome.cash, true]);
     });
-    if (rec.salaryIncomeDelta) flowRows.push(['📈 연봉 변화로 달라진 이번 턴 소득 (후반 5년)', rec.salaryIncomeDelta, true]);
+    if (rec.salaryIncomeDelta) flowRows.push(['📈 연봉 변화로 달라진 이번 턴 소득', rec.salaryIncomeDelta, true]);
     const moneyFlow = `
         <table class="money-flow">
             ${flowRows.map(([label, amount, isChange]) => `<tr><td>${label}</td><td class="${isChange ? toneClass(amount) : ''}">${isChange ? signed(amount) : fmt(amount)}만 원</td></tr>`).join('')}
@@ -1395,7 +1573,7 @@ function renderChoiceResult(turn) {
             <h4><span class="step-num">3</span>필수·선택에 따른 금액 변화</h4>
             ${moneyFlow}
         </div>
-        <div class="next-hint reveal" style="animation-delay:1.8s;">👇 아래 STEP 2에서 예금·주식·채권 비율을 정하고 [자산 배분 확정]을 누르세요.</div>
+        <div class="next-hint reveal" style="animation-delay:1.8s;">👇 아래 STEP 2에서 예금·주식·채권 비율을 정한 뒤 [자산 배분 확정]을 누르세요. (대출은 화면 위 🏦 대출에서 언제든 받을 수 있어요)</div>
     `;
     el.style.display = 'block';
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1448,6 +1626,20 @@ function renderFinalResult(turn) {
     const totalLabel = turn < 4 ? `${turn + 1}턴으로 이월되는 총 자금` : '64세 은퇴 시점 총 자금';
     const growth = rec.final - rec.carry;
     const parts = ASSETS.map(([k, label]) => `${label} ${fmt(rec.res[k])}만`).join(' + ') + (rec.debt < 0 ? ` + 부채 ${signed(rec.debt)}만` : '');
+    // 대출 효과: 빌린 돈이 평균 수익률만큼 번 돈 - 이자
+    const avgRate = ASSETS.reduce((sum, [k]) => sum + rec.p[k] * rec.r[k], 0) / 100;
+    const loanGain = Math.round(rec.loanInvested * avgRate / 100);
+    const loanNet = loanGain - rec.loanInterest;
+    const loanRows = rec.loan ? `${rec.loanCash ? `
+        <tr><td>💵 현금으로 보관한 대출</td><td colspan="4">자산 배분 확정 후에 빌려 투자하지 않은 돈</td><td class="up">${signed(rec.loanCash)}만</td></tr>` : ''}
+        <tr><td>🏦 대출 원금 상환</td><td colspan="4">턴이 끝나 은행이 원금을 가져감</td><td class="down">${signed(-rec.loan)}만</td></tr>
+        <tr><td>💸 대출 이자</td><td colspan="4">원금 ${fmt(rec.loan)}만 × 금리 ${rec.loanRate.rate}%</td><td class="down">${signed(-rec.loanInterest)}만</td></tr>` : '';
+    const loanEffect = rec.loan ? `<p class="loan-effect">💳 대출 효과: ${rec.loanInvested
+            ? `투자한 대출 ${fmt(rec.loanInvested)}만 원이 내 투자 비율의 평균 수익률(${+avgRate.toFixed(1)}%)로 <strong class="${toneClass(loanGain)}">${signed(loanGain)}만 원</strong>을 벌었고,`
+            : '빌린 돈을 투자하지 않아 벌어들인 돈은 없고,'}
+        이자 <strong class="down">${signed(-rec.loanInterest)}만 원</strong>을 냈어요.
+        → 대출로 얻은 순효과 <strong class="${toneClass(loanNet)}">${signed(loanNet)}만 원</strong>
+        (${loanNet >= 0 ? '번 돈이 이자보다 커서 이득' : '번 돈이 이자보다 작아 손해'})</p>` : '';
     const nextHint = turn < 4
         ? `👆 화면 위의 <u>[${config[turn + 1].name}]</u> 탭을 눌러 다음 턴으로 넘어가세요!`
         : '👆 화면 위의 <u>[🏆 최종 결과]</u> 탭을 눌러 최종 리포트를 확인하세요!';
@@ -1460,20 +1652,23 @@ function renderFinalResult(turn) {
             <div style="overflow-x:auto;">
                 <table class="result-table">
                     <thead><tr><th>자산</th><th>비율</th><th>투자</th><th>수익률</th><th>최종</th><th>손익</th></tr></thead>
-                    <tbody>${investRows}</tbody>
+                    <tbody>${investRows}${loanRows}</tbody>
                 </table>
             </div>
+            ${loanEffect}
         </div>
         <div class="result-step reveal" style="animation-delay:0.6s;">
             <h4><span class="step-num">2</span>왜 이렇게 나왔을까? (흥덕 뉴스 해설)</h4>
             ${whyHtml(rec)}
         </div>
-        <div class="result-step total-box reveal" style="animation-delay:1.2s;">
+        <div class="result-step total-box ${rec.final < 0 ? 'negative' : ''} reveal" style="animation-delay:1.2s;">
             <h4><span class="step-num">3</span>${totalLabel}</h4>
             <div class="total-value">${fmt(rec.final)} 만 원</div>
+            ${rec.final < 0 ? `<p class="debt-note">⚠️ 내 돈이 마이너스(빚 ${fmt(-rec.final)}만 원)가 됐어요. ${turn < 4 ? '다음 턴은 이 빚을 안고 시작합니다.' : '은퇴 시점에 빚이 남았습니다.'}</p>` : ''}
             <div class="total-diff">${prevLabel} ${fmt(rec.carry)}만 원 대비 <span class="${toneClass(growth)}">${signed(growth)}만 원</span></div>
             <div class="total-breakdown">
-                투자 가능 여유 자금 ${fmt(rec.avail)}만 원 → ${parts} = <strong>${fmt(rec.final)}만 원</strong>
+                투자 가능 여유 자금 ${fmt(rec.avail)}만 원${rec.loanInvested ? ` + 대출 ${fmt(rec.loanInvested)}만 원` : ''} → ${parts} = ${rec.loan ? `${fmt(rec.investFinal)}만 원<br>
+                ${rec.loanCash ? `현금으로 보관한 대출 ${signed(rec.loanCash)}만 · ` : ''}대출 상환: 원금 ${signed(-rec.loan)}만 + 이자 ${signed(-rec.loanInterest)}만 → ` : ''}<strong>${fmt(rec.final)}만 원</strong>
             </div>
         </div>
         <div class="next-hint reveal" style="animation-delay:1.8s;">${nextHint}</div>
@@ -1493,6 +1688,14 @@ function renderSummary() {
         const pickLine = (icon, v, detail) =>
             `<div class="pick-line">${icon} <span class="${v.cls === 'gain' ? 'up' : (v.cls === 'loss' ? 'down' : '')}">${v.text}</span> (${detail})</div>`;
         const lines = rec.picks.map(({ choice, outcome }) => {
+            const g = outcome.general;
+            if (g) {
+                const parts = [`비용 ${signed(-g.cost)}만`];
+                if (g.gain) parts.push(`수익 ${signed(g.gain)}만`);
+                if (g.salary) parts.push(`연봉 +${g.salary}%`);
+                parts.push(`순이익 ${signed(g.net)}만${g.salary ? '(예상)' : ''}`);
+                return pickLine(choice.icon, verdict(outcome), parts.join(' / '));
+            }
             const parts = [];
             if (outcome.cash) parts.push(`${signed(outcome.cash)}만`);
             if (outcome.salaryText) parts.push(outcome.raise ? `연봉 ${outcome.salaryText}` : outcome.salaryText);
@@ -1511,17 +1714,19 @@ function renderSummary() {
         tr.innerHTML = `
             <td><strong>${config[t].name}</strong><br><span class="sub-note">시나리오 ${rec.scenarioNo} ${rec.scenario.name}</span></td>
             <td>${fmt(rec.salary)} ➔ ${fmt(rec.salaryAfter)}만<br><span class="${toneClass(salaryPct)}">(${pctText(salaryPct)})</span></td>
-            <td>${fmt(rec.avail)} 만 원</td>
+            <td>${fmt(rec.avail)} 만 원${rec.loan ? `<br><span class="sub-note">+ 대출 ${fmt(rec.loan)}만 (금리 ${rec.loanRate.rate}%, 이자 ${fmt(rec.loanInterest)}만)</span>` : ''}</td>
             <td>${assetCell('dep')}</td>
             <td>${assetCell('stk')}</td>
             <td>${assetCell('bnd')}</td>
             <td style="text-align:left;">${picks}</td>
-            <td style="color:#059669; font-weight:bold;">${fmt(rec.final)} 만 원</td>
+            <td style="color:${rec.final < 0 ? 'var(--danger)' : '#059669'}; font-weight:bold;">${fmt(rec.final)} 만 원${rec.final < 0 ? '<br>(빚)' : ''}</td>
         `;
         tbody.appendChild(tr);
     }
 
-    document.getElementById('final_total_display').innerText = `${fmt(records[4].final)} 만 원`;
+    const finalEl = document.getElementById('final_total_display');
+    finalEl.innerText = records[4].final < 0 ? `${fmt(records[4].final)} 만 원 (빚)` : `${fmt(records[4].final)} 만 원`;
+    finalEl.style.color = records[4].final < 0 ? 'var(--danger)' : '#15803d';
     document.getElementById('final_stats').innerHTML =
         `시드머니 ${fmt(SEED_MONEY)}만 원으로 시작 │ 연봉 ${fmt(records[1].salary)}만 원 ➔ ${fmt(records[4].salaryAfter)}만 원`;
 }
@@ -1529,6 +1734,7 @@ function renderSummary() {
 // 게임 초기화 (처음 로드 및 다시 하기 / 새로고침 시 브라우저가 복원한 입력값도 기본값으로 되돌림)
 function initGame() {
     records = {};
+    loans = {};
     for (let t = 1; t <= 4; t++) {
         const page = document.getElementById(`turn${t}`);
         page.querySelectorAll('input[type="number"]').forEach(el => { el.value = el.defaultValue; });
