@@ -113,6 +113,9 @@
         .loan-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-weight: bold; }
         .loan-row input[type="number"] { width: 120px; padding: 6px 8px; font-size: 0.95rem; }
         .loan-rate { color: var(--primary); }
+        .btn-loan { padding: 7px 14px; border: none; border-radius: 6px; background: var(--primary); color: #fff; font-weight: bold; cursor: pointer; }
+        .btn-loan:hover { background: var(--primary-hover); }
+        .btn-loan:disabled { background: #94a3b8; cursor: default; }
         .loan-info { margin-top: 6px; font-size: 0.88rem; color: #475569; line-height: 1.6; }
         .loan-info.down { color: var(--danger); font-weight: bold; }
         .loan-effect { margin: 10px 0 0; padding: 10px 12px; border-left: 4px solid var(--primary); background: #eff6ff; border-radius: 4px; font-size: 0.92rem; line-height: 1.6; }
@@ -185,6 +188,9 @@
         .total-box .total-value { font-size: 2.2rem; font-weight: 800; color: #15803d; margin: 4px 0 6px; }
         .total-box .total-diff { font-weight: bold; margin-bottom: 8px; }
         .total-box .total-breakdown { font-size: 0.88rem; color: #475569; }
+        .total-box.negative { border-color: var(--danger); background: linear-gradient(135deg, #fef2f2, #fff7ed); }
+        .total-box.negative .total-value { color: var(--danger); }
+        .debt-note { margin: 0 0 8px; color: var(--danger); font-weight: bold; }
         .next-hint {
             text-align: center; font-weight: bold; color: #b45309; background: #fffbeb;
             border: 2px dashed var(--accent); border-radius: 10px; padding: 14px; font-size: 1.05rem;
@@ -224,9 +230,9 @@
 <div class="container">
     <h1>📊 생애주기 자산배분 경제 게임</h1>
     <p class="rule-note">
-        진행 순서: <strong>STEP 1 선택 완료 → STEP 2 자산 배분(대출) 확정 → STEP 3 시나리오(1~5) 선택 → STEP 4 최종 완료</strong><br>
+        진행 순서: <strong>STEP 1 선택 완료 → STEP 2 자산 배분 확정 → STEP 3 시나리오(1~5) 선택 → STEP 4 최종 완료</strong><br>
         🎲 선택 사항의 금액과 이익/손실 여부는 <strong>선택 완료를 눌러야 공개</strong>되고, 끝낸 단계는 되돌릴 수 없습니다.<br>
-        최종 완료 후 <strong>화면 위의 다음 턴 탭</strong>을 눌러 넘어가세요.
+        🏦 대출은 단계와 상관없이 언제든 받을 수 있습니다. 최종 완료 후 <strong>화면 위의 다음 턴 탭</strong>을 눌러 넘어가세요.
     </p>
 
     <!-- 턴 선택 탭 -->
@@ -246,6 +252,17 @@
                 연봉: <strong id="t1_salary_txt">0</strong> 만 원<span id="t1_salary_diff"></span> │
                 10년 누적 잉여 자금: <strong id="t1_surplus_txt">0</strong> 만 원 <span id="t1_surplus_detail" class="sub-note"></span>
             </p>
+
+            <!-- 대출: 단계와 상관없이 언제든 바로 받을 수 있음 -->
+            <div class="loan-box">
+                <div class="loan-head">🏦 대출 <span class="sub-note">단계와 상관없이 언제든 바로 대출 · 한도 3억 원 · 1,000만 원 단위 · 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져감</span></div>
+                <div class="loan-row">
+                    <input type="number" id="t1_loan" min="0" max="30000" step="1000" value="1000"> 만 원
+                    <button class="btn-loan" id="t1_btn_loan" onclick="takeLoan(1)">대출 받기</button>
+                    <span class="loan-rate" id="t1_loan_rate"></span>
+                </div>
+                <div class="loan-info" id="t1_loan_info"></div>
+            </div>
 
             <!-- STEP 1: 지출과 선택 -->
             <div class="step" id="t1_step1">
@@ -275,14 +292,6 @@
                 </div>
                 <p id="t1_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
 
-                <div class="loan-box">
-                    <div class="loan-head">🏦 대출 (선택) <span class="sub-note">한도 3억 원 · 1,000만 원 단위 · 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져감</span></div>
-                    <div class="loan-row">
-                        대출 금액 <input type="number" id="t1_loan" min="0" max="30000" step="1000" value="0" oninput="previewAllocation(1)"> 만 원
-                        <span class="loan-rate" id="t1_loan_rate"></span>
-                    </div>
-                    <div class="loan-info" id="t1_loan_info"></div>
-                </div>
 
                 <div class="grid">
                     <div><label>예금 (%)</label><input type="number" id="t1_p_dep" value="40" oninput="previewAllocation(1)"></div>
@@ -349,6 +358,17 @@
                 10년 잉여 자금: <strong id="t2_surplus_txt">0</strong> 만 원 <span id="t2_surplus_detail" class="sub-note"></span>
             </p>
 
+            <!-- 대출: 단계와 상관없이 언제든 바로 받을 수 있음 -->
+            <div class="loan-box">
+                <div class="loan-head">🏦 대출 <span class="sub-note">단계와 상관없이 언제든 바로 대출 · 한도 3억 원 · 1,000만 원 단위 · 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져감</span></div>
+                <div class="loan-row">
+                    <input type="number" id="t2_loan" min="0" max="30000" step="1000" value="1000"> 만 원
+                    <button class="btn-loan" id="t2_btn_loan" onclick="takeLoan(2)">대출 받기</button>
+                    <span class="loan-rate" id="t2_loan_rate"></span>
+                </div>
+                <div class="loan-info" id="t2_loan_info"></div>
+            </div>
+
             <!-- STEP 1: 지출과 선택 -->
             <div class="step" id="t2_step1">
                 <div class="step-head"><span class="step-label">STEP 1</span> 지출과 선택 <span class="step-status" id="t2_status1"></span></div>
@@ -374,14 +394,6 @@
                 </div>
                 <p id="t2_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
 
-                <div class="loan-box">
-                    <div class="loan-head">🏦 대출 (선택) <span class="sub-note">한도 3억 원 · 1,000만 원 단위 · 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져감</span></div>
-                    <div class="loan-row">
-                        대출 금액 <input type="number" id="t2_loan" min="0" max="30000" step="1000" value="0" oninput="previewAllocation(2)"> 만 원
-                        <span class="loan-rate" id="t2_loan_rate"></span>
-                    </div>
-                    <div class="loan-info" id="t2_loan_info"></div>
-                </div>
 
                 <div class="grid">
                     <div><label>예금 (%)</label><input type="number" id="t2_p_dep" value="40" oninput="previewAllocation(2)"></div>
@@ -448,6 +460,17 @@
                 10년 잉여 자금: <strong id="t3_surplus_txt">0</strong> 만 원 <span id="t3_surplus_detail" class="sub-note"></span>
             </p>
 
+            <!-- 대출: 단계와 상관없이 언제든 바로 받을 수 있음 -->
+            <div class="loan-box">
+                <div class="loan-head">🏦 대출 <span class="sub-note">단계와 상관없이 언제든 바로 대출 · 한도 3억 원 · 1,000만 원 단위 · 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져감</span></div>
+                <div class="loan-row">
+                    <input type="number" id="t3_loan" min="0" max="30000" step="1000" value="1000"> 만 원
+                    <button class="btn-loan" id="t3_btn_loan" onclick="takeLoan(3)">대출 받기</button>
+                    <span class="loan-rate" id="t3_loan_rate"></span>
+                </div>
+                <div class="loan-info" id="t3_loan_info"></div>
+            </div>
+
             <!-- STEP 1: 지출과 선택 -->
             <div class="step" id="t3_step1">
                 <div class="step-head"><span class="step-label">STEP 1</span> 지출과 선택 <span class="step-status" id="t3_status1"></span></div>
@@ -473,14 +496,6 @@
                 </div>
                 <p id="t3_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
 
-                <div class="loan-box">
-                    <div class="loan-head">🏦 대출 (선택) <span class="sub-note">한도 3억 원 · 1,000만 원 단위 · 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져감</span></div>
-                    <div class="loan-row">
-                        대출 금액 <input type="number" id="t3_loan" min="0" max="30000" step="1000" value="0" oninput="previewAllocation(3)"> 만 원
-                        <span class="loan-rate" id="t3_loan_rate"></span>
-                    </div>
-                    <div class="loan-info" id="t3_loan_info"></div>
-                </div>
 
                 <div class="grid">
                     <div><label>예금 (%)</label><input type="number" id="t3_p_dep" value="30" oninput="previewAllocation(3)"></div>
@@ -547,6 +562,17 @@
                 10년 잉여 자금: <strong id="t4_surplus_txt">0</strong> 만 원 <span id="t4_surplus_detail" class="sub-note"></span>
             </p>
 
+            <!-- 대출: 단계와 상관없이 언제든 바로 받을 수 있음 -->
+            <div class="loan-box">
+                <div class="loan-head">🏦 대출 <span class="sub-note">단계와 상관없이 언제든 바로 대출 · 한도 3억 원 · 1,000만 원 단위 · 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져감</span></div>
+                <div class="loan-row">
+                    <input type="number" id="t4_loan" min="0" max="30000" step="1000" value="1000"> 만 원
+                    <button class="btn-loan" id="t4_btn_loan" onclick="takeLoan(4)">대출 받기</button>
+                    <span class="loan-rate" id="t4_loan_rate"></span>
+                </div>
+                <div class="loan-info" id="t4_loan_info"></div>
+            </div>
+
             <!-- STEP 1: 지출과 선택 -->
             <div class="step" id="t4_step1">
                 <div class="step-head"><span class="step-label">STEP 1</span> 지출과 선택 <span class="step-status" id="t4_status1"></span></div>
@@ -571,14 +597,6 @@
                 </div>
                 <p id="t4_debt" class="warning">⚠️ 여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
 
-                <div class="loan-box">
-                    <div class="loan-head">🏦 대출 (선택) <span class="sub-note">한도 3억 원 · 1,000만 원 단위 · 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져감</span></div>
-                    <div class="loan-row">
-                        대출 금액 <input type="number" id="t4_loan" min="0" max="30000" step="1000" value="0" oninput="previewAllocation(4)"> 만 원
-                        <span class="loan-rate" id="t4_loan_rate"></span>
-                    </div>
-                    <div class="loan-info" id="t4_loan_info"></div>
-                </div>
 
                 <div class="grid">
                     <div><label>예금 (%)</label><input type="number" id="t4_p_dep" value="60" oninput="previewAllocation(4)"></div>
@@ -1050,7 +1068,11 @@ function turnBase(turn) {
 function refreshTurn(turn) {
     const cfg = config[turn];
     const b = turnBase(turn);
-    if (turn > 1) setText(`t${turn}_prev_txt`, fmt(b.carry));
+    if (turn > 1) {
+        const prevEl = document.getElementById(`t${turn}_prev_txt`);
+        prevEl.innerText = b.carry < 0 ? `빚 ${fmt(-b.carry)}` : fmt(b.carry);
+        prevEl.style.color = b.carry < 0 ? 'var(--danger)' : '';
+    }
     setText(`t${turn}_salary_txt`, fmt(b.salary));
     const multPct = (b.mult - 1) * 100;
     document.getElementById(`t${turn}_salary_diff`).innerHTML = Math.abs(multPct) >= 0.05
@@ -1076,6 +1098,30 @@ function loanRateInfo(turn) {
     return { rate: base + LOAN.spread, base, basis };
 }
 const readLoan = turn => Number(document.getElementById(`t${turn}_loan`).value || 0);
+
+// 턴별 대출 현황: 자산 배분 확정 전에 빌린 돈은 투자, 확정 후에 빌린 돈은 현금으로 보관
+// (시나리오를 보고 나서 빌려 투자하는 것을 막기 위해)
+let loans = {};
+const loanOf = turn => (loans[turn] = loans[turn] || { invested: 0, cash: 0 });
+const loanTotal = turn => loanOf(turn).invested + loanOf(turn).cash;
+
+// 대출 받기: 누르는 즉시 반영, 빌린 돈은 턴이 끝날 때 한꺼번에 갚음 (중간 상환 없음)
+function takeLoan(turn) {
+    if (stageOf(turn) >= 4) return;
+    const amount = readLoan(turn);
+    if (!validLoan(amount) || amount === 0) {
+        alert("대출 금액은 1,000만 원 단위로 입력하세요! (한도 3억 원)");
+        return;
+    }
+    const remain = LOAN.max - loanTotal(turn);
+    if (amount > remain) {
+        alert(`대출 한도 3억 원을 넘을 수 없습니다. 남은 한도: ${fmt(remain)}만 원`);
+        return;
+    }
+    if (stageOf(turn) >= 2) loanOf(turn).cash += amount;
+    else loanOf(turn).invested += amount;
+    previewAllocation(turn);
+}
 const validLoan = loan => Number.isInteger(loan) && loan >= 0 && loan <= LOAN.max && loan % LOAN.step === 0;
 const loanInterest = (loan, rate) => Math.round(loan * rate / 100);
 
@@ -1097,22 +1143,27 @@ function previewAllocation(turn) {
     availEl.innerText = rec ? fmt(rec.avail) : 'STEP 1 완료 후 계산';
     availEl.style.color = rec && rec.avail < 0 ? 'var(--danger)' : '#2563eb';
 
-    // 대출: 확정 전에는 입력값, 확정 후에는 기록된 값
-    const lr = rec && rec.loanRate ? rec.loanRate : loanRateInfo(turn);
-    const loan = rec && rec.stage >= 2 ? rec.loan : readLoan(turn);
-    const loanOk = validLoan(loan);
+    // 대출 현황 (단계와 상관없이 표시)
+    const lr = loanRateInfo(turn);
+    const l = loanOf(turn);
+    const total = l.invested + l.cash;
+    const interest = loanInterest(total, lr.rate);
     setText(`t${turn}_loan_rate`, `이번 턴 대출 금리 ${lr.rate}%`);
-    const loanInfo = document.getElementById(`t${turn}_loan_info`);
-    loanInfo.classList.toggle('down', !loanOk);
-    loanInfo.innerHTML = !loanOk ? '⚠️ 0~30,000 사이에서 1,000만 원 단위로 입력하세요.'
-        : `금리 근거: ${lr.basis} + 은행 가산금리 ${LOAN.spread}%p = ${lr.rate}%` +
-          (loan ? `<br>턴이 끝나면 원금 ${fmt(loan)}만 + 이자 ${fmt(loanInterest(loan, lr.rate))}만 = <strong>${fmt(loan + loanInterest(loan, lr.rate))}만 원</strong>을 갚습니다.` : '');
+    document.getElementById(`t${turn}_loan_info`).innerHTML = stageOf(turn) >= 4
+        ? `금리 근거: ${lr.basis} + 은행 가산금리 ${LOAN.spread}%p = ${lr.rate}%<br>` +
+          (total ? `이번 턴 대출 ${fmt(total)}만 원 · 원금과 이자 ${fmt(total + interest)}만 원 <strong>상환 완료</strong>` : '이번 턴에는 대출을 받지 않았습니다.')
+        : `금리 근거: ${lr.basis} + 은행 가산금리 ${LOAN.spread}%p = ${lr.rate}%<br>` +
+        `현재 대출 <strong>${fmt(total)}만 원</strong> (남은 한도 ${fmt(LOAN.max - total)}만 원)` +
+        (total ? ` · 턴이 끝나면 원금 ${fmt(total)}만 + 이자 ${fmt(interest)}만 = <strong>${fmt(total + interest)}만 원</strong> 상환` : '') +
+        (stageOf(turn) < 2 ? '<br>자산 배분 확정 전에 빌린 돈은 투자 금액에 더해집니다.' : '') +
+        (l.cash ? `<br>※ 자산 배분 확정 후에 빌린 ${fmt(l.cash)}만 원은 투자되지 않고 현금으로 보관됩니다.` : '');
 
-    const funds = rec ? rec.avail + (loanOk ? loan : 0) : 0;
+    const loanInvested = rec && rec.stage >= 2 ? rec.loanInvested : l.invested;
+    const funds = rec ? rec.avail + loanInvested : 0;
     document.getElementById(`t${turn}_debt`).style.display = rec && funds < 0 ? 'block' : 'none';
     const inv = rec ? investAmounts(funds, p) : null;
     setText(`t${turn}_alloc_preview`, inv && validAllocation(p)
-        ? `→ 예금 ${fmt(inv.dep)}만 · 주식 ${fmt(inv.stk)}만 · 채권 ${fmt(inv.bnd)}만 원 투자` + (loanOk && loan ? ` (대출 ${fmt(loan)}만 원 포함)` : '') : '');
+        ? `→ 예금 ${fmt(inv.dep)}만 · 주식 ${fmt(inv.stk)}만 · 채권 ${fmt(inv.bnd)}만 원 투자` + (loanInvested ? ` (대출 ${fmt(loanInvested)}만 원 포함)` : '') : '');
     ASSETS.forEach(([k]) => {
         setText(`t${turn}_inv_${k}`, inv ? `${fmt(inv[k])}만 원` : 'STEP 1 완료 후');
         setText(`t${turn}_rate_${k}`, rec && rec.r ? `${rec.r[k] > 0 ? '+' : ''}${rec.r[k]}%` : '시나리오 공개 후');
@@ -1141,7 +1192,8 @@ function updateStepUI(turn) {
     document.querySelectorAll(`#t${turn}_step1 input:not([data-fixed])`).forEach(el => el.disabled = stage >= 1);
     if (stage === 0) updateChoiceAvailability(turn);
     ASSETS.forEach(([k]) => { document.getElementById(`t${turn}_p_${k}`).disabled = stage !== 1; });
-    document.getElementById(`t${turn}_loan`).disabled = stage !== 1;
+    document.getElementById(`t${turn}_loan`).disabled = stage >= 4;
+    document.getElementById(`t${turn}_btn_loan`).disabled = stage >= 4;
     document.getElementById(`t${turn}_sc`).disabled = stage < 2 || stage >= 4;
 
     [
@@ -1335,17 +1387,9 @@ function confirmAllocation(turn) {
         alert("자산 배분 비율은 0 이상이고, 합이 100%가 되어야 합니다!");
         return;
     }
-    const loan = readLoan(turn);
-    if (!validLoan(loan)) {
-        alert("대출 금액은 0~3억 원(30,000만 원) 사이에서 1,000만 원 단위로 입력하세요!");
-        return;
-    }
-    const loanRate = loanRateInfo(turn);
-    const funds = rec.avail + loan;
-    Object.assign(rec, {
-        stage: 2, p, loan, loanRate, loanInterest: loanInterest(loan, loanRate.rate),
-        inv: investAmounts(funds, p), debt: Math.min(funds, 0)
-    });
+    const loanInvested = loanOf(turn).invested;  // 배분 확정 전에 빌린 돈은 함께 투자
+    const funds = rec.avail + loanInvested;
+    Object.assign(rec, { stage: 2, p, loanInvested, inv: investAmounts(funds, p), debt: Math.min(funds, 0) });
     updateStepUI(turn);
     previewAllocation(turn);
 }
@@ -1377,9 +1421,15 @@ function applyScenario(turn) {
 function completeTurn(turn) {
     const rec = records[turn];
     if (!rec || rec.stage !== 3) return;
-    rec.final = rec.investFinal - rec.loan - rec.loanInterest;  // 턴이 끝나면 은행이 대출 원금과 이자를 가져감
+    const l = loanOf(turn);
+    const loanRate = loanRateInfo(turn);
+    const loan = l.invested + l.cash;
+    Object.assign(rec, { loan, loanCash: l.cash, loanRate, loanInterest: loanInterest(loan, loanRate.rate) });
+    // 턴이 끝나면 은행이 대출 원금과 이자를 가져감 (확정 후 빌려 현금으로 둔 돈은 투자 결과에 더함)
+    rec.final = rec.investFinal + rec.loanCash - rec.loan - rec.loanInterest;
     rec.stage = 4;
     updateStepUI(turn);
+    previewAllocation(turn);
     renderFinalResult(turn);
 
     const tab = document.getElementById(`tab${turn}`);
@@ -1523,7 +1573,7 @@ function renderChoiceResult(turn) {
             <h4><span class="step-num">3</span>필수·선택에 따른 금액 변화</h4>
             ${moneyFlow}
         </div>
-        <div class="next-hint reveal" style="animation-delay:1.8s;">👇 아래 STEP 2에서 (필요하면 대출을 받고) 예금·주식·채권 비율을 정한 뒤 [자산 배분 확정]을 누르세요.</div>
+        <div class="next-hint reveal" style="animation-delay:1.8s;">👇 아래 STEP 2에서 예금·주식·채권 비율을 정한 뒤 [자산 배분 확정]을 누르세요. (대출은 화면 위 🏦 대출에서 언제든 받을 수 있어요)</div>
     `;
     el.style.display = 'block';
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1578,15 +1628,18 @@ function renderFinalResult(turn) {
     const parts = ASSETS.map(([k, label]) => `${label} ${fmt(rec.res[k])}만`).join(' + ') + (rec.debt < 0 ? ` + 부채 ${signed(rec.debt)}만` : '');
     // 대출 효과: 빌린 돈이 평균 수익률만큼 번 돈 - 이자
     const avgRate = ASSETS.reduce((sum, [k]) => sum + rec.p[k] * rec.r[k], 0) / 100;
-    const loanGain = Math.round(rec.loan * avgRate / 100);
+    const loanGain = Math.round(rec.loanInvested * avgRate / 100);
     const loanNet = loanGain - rec.loanInterest;
-    const loanRows = rec.loan ? `
+    const loanRows = rec.loan ? `${rec.loanCash ? `
+        <tr><td>💵 현금으로 보관한 대출</td><td colspan="4">자산 배분 확정 후에 빌려 투자하지 않은 돈</td><td class="up">${signed(rec.loanCash)}만</td></tr>` : ''}
         <tr><td>🏦 대출 원금 상환</td><td colspan="4">턴이 끝나 은행이 원금을 가져감</td><td class="down">${signed(-rec.loan)}만</td></tr>
         <tr><td>💸 대출 이자</td><td colspan="4">원금 ${fmt(rec.loan)}만 × 금리 ${rec.loanRate.rate}%</td><td class="down">${signed(-rec.loanInterest)}만</td></tr>` : '';
-    const loanEffect = rec.loan ? `<p class="loan-effect">💳 대출 효과: 빌린 ${fmt(rec.loan)}만 원이 내 투자 비율의 평균 수익률(${+avgRate.toFixed(1)}%)로
-        <strong class="${toneClass(loanGain)}">${signed(loanGain)}만 원</strong>을 벌었고, 이자 <strong class="down">${signed(-rec.loanInterest)}만 원</strong>을 냈어요.
+    const loanEffect = rec.loan ? `<p class="loan-effect">💳 대출 효과: ${rec.loanInvested
+            ? `투자한 대출 ${fmt(rec.loanInvested)}만 원이 내 투자 비율의 평균 수익률(${+avgRate.toFixed(1)}%)로 <strong class="${toneClass(loanGain)}">${signed(loanGain)}만 원</strong>을 벌었고,`
+            : '빌린 돈을 투자하지 않아 벌어들인 돈은 없고,'}
+        이자 <strong class="down">${signed(-rec.loanInterest)}만 원</strong>을 냈어요.
         → 대출로 얻은 순효과 <strong class="${toneClass(loanNet)}">${signed(loanNet)}만 원</strong>
-        (${loanNet >= 0 ? '수익률이 대출 금리보다 높아 이득' : '수익률이 대출 금리보다 낮아 손해'})</p>` : '';
+        (${loanNet >= 0 ? '번 돈이 이자보다 커서 이득' : '번 돈이 이자보다 작아 손해'})</p>` : '';
     const nextHint = turn < 4
         ? `👆 화면 위의 <u>[${config[turn + 1].name}]</u> 탭을 눌러 다음 턴으로 넘어가세요!`
         : '👆 화면 위의 <u>[🏆 최종 결과]</u> 탭을 눌러 최종 리포트를 확인하세요!';
@@ -1608,13 +1661,14 @@ function renderFinalResult(turn) {
             <h4><span class="step-num">2</span>왜 이렇게 나왔을까? (흥덕 뉴스 해설)</h4>
             ${whyHtml(rec)}
         </div>
-        <div class="result-step total-box reveal" style="animation-delay:1.2s;">
+        <div class="result-step total-box ${rec.final < 0 ? 'negative' : ''} reveal" style="animation-delay:1.2s;">
             <h4><span class="step-num">3</span>${totalLabel}</h4>
             <div class="total-value">${fmt(rec.final)} 만 원</div>
+            ${rec.final < 0 ? `<p class="debt-note">⚠️ 내 돈이 마이너스(빚 ${fmt(-rec.final)}만 원)가 됐어요. ${turn < 4 ? '다음 턴은 이 빚을 안고 시작합니다.' : '은퇴 시점에 빚이 남았습니다.'}</p>` : ''}
             <div class="total-diff">${prevLabel} ${fmt(rec.carry)}만 원 대비 <span class="${toneClass(growth)}">${signed(growth)}만 원</span></div>
             <div class="total-breakdown">
-                투자 가능 여유 자금 ${fmt(rec.avail)}만 원${rec.loan ? ` + 대출 ${fmt(rec.loan)}만 원` : ''} → ${parts} = ${rec.loan ? `${fmt(rec.investFinal)}만 원<br>
-                대출 상환: 원금 ${signed(-rec.loan)}만 + 이자 ${signed(-rec.loanInterest)}만 → ` : ''}<strong>${fmt(rec.final)}만 원</strong>
+                투자 가능 여유 자금 ${fmt(rec.avail)}만 원${rec.loanInvested ? ` + 대출 ${fmt(rec.loanInvested)}만 원` : ''} → ${parts} = ${rec.loan ? `${fmt(rec.investFinal)}만 원<br>
+                ${rec.loanCash ? `현금으로 보관한 대출 ${signed(rec.loanCash)}만 · ` : ''}대출 상환: 원금 ${signed(-rec.loan)}만 + 이자 ${signed(-rec.loanInterest)}만 → ` : ''}<strong>${fmt(rec.final)}만 원</strong>
             </div>
         </div>
         <div class="next-hint reveal" style="animation-delay:1.8s;">${nextHint}</div>
@@ -1665,12 +1719,14 @@ function renderSummary() {
             <td>${assetCell('stk')}</td>
             <td>${assetCell('bnd')}</td>
             <td style="text-align:left;">${picks}</td>
-            <td style="color:#059669; font-weight:bold;">${fmt(rec.final)} 만 원</td>
+            <td style="color:${rec.final < 0 ? 'var(--danger)' : '#059669'}; font-weight:bold;">${fmt(rec.final)} 만 원${rec.final < 0 ? '<br>(빚)' : ''}</td>
         `;
         tbody.appendChild(tr);
     }
 
-    document.getElementById('final_total_display').innerText = `${fmt(records[4].final)} 만 원`;
+    const finalEl = document.getElementById('final_total_display');
+    finalEl.innerText = records[4].final < 0 ? `${fmt(records[4].final)} 만 원 (빚)` : `${fmt(records[4].final)} 만 원`;
+    finalEl.style.color = records[4].final < 0 ? 'var(--danger)' : '#15803d';
     document.getElementById('final_stats').innerHTML =
         `시드머니 ${fmt(SEED_MONEY)}만 원으로 시작 │ 연봉 ${fmt(records[1].salary)}만 원 ➔ ${fmt(records[4].salaryAfter)}만 원`;
 }
@@ -1678,6 +1734,7 @@ function renderSummary() {
 // 게임 초기화 (처음 로드 및 다시 하기 / 새로고침 시 브라우저가 복원한 입력값도 기본값으로 되돌림)
 function initGame() {
     records = {};
+    loans = {};
     for (let t = 1; t <= 4; t++) {
         const page = document.getElementById(`turn${t}`);
         page.querySelectorAll('input[type="number"]').forEach(el => { el.value = el.defaultValue; });
