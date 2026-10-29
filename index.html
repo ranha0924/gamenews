@@ -594,9 +594,9 @@ const VIEW = {
 };
 
 // 대출: 한도 3억, 1,000만 원 단위, 그 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져감
-// 금리 = 직전 턴 시나리오의 금리(예금 이자율) + 은행 가산금리 / 1턴은 직전 턴이 없어 기본 금리를 씀
+// 금리 = 직전 턴에 뽑은 시나리오의 예금금리 그대로 / 1턴은 직전 턴이 없어 기본 금리를 씀
 // 게임의 자산 수익률이 턴마다 한 번 적용되는 것처럼, 대출 이자도 턴 전체에 한 번 적용
-const LOAN = { max: 30000, step: 1000, spread: 2, firstTurnBase: 3 };
+const LOAN = { max: 30000, step: 1000, firstTurnBase: 3 };
 
 // 턴별 기본 설정 (금액 단위: 만 원 / income·expense는 월 기준, 10년 잉여 자금 = (월 소득 - 월 생활비) × 120개월)
 const config = {
@@ -1023,8 +1023,8 @@ function refreshTurn(turn) {
 function loanRateInfo(turn) {
     const prev = records[turn - 1];
     const base = prev ? prev.scenario.dep : LOAN.firstTurnBase;
-    const basis = prev ? `직전 ${turn - 1}턴 시나리오 ${prev.scenarioNo}(${prev.scenario.name}) 금리 ${base}%` : `1턴은 직전 턴이 없어 기본 금리 ${base}%`;
-    return { rate: base + LOAN.spread, base, basis };
+    const basis = prev ? `직전 ${turn - 1}턴 시나리오 ${prev.scenarioNo}(${prev.scenario.name})의 예금금리 ${base}%` : `1턴은 직전 턴이 없어 기본 금리 ${base}%`;
+    return { rate: base, base, basis };
 }
 const readLoan = turn => Number(document.getElementById(`t${turn}_loan`).value || 0);
 
@@ -1095,7 +1095,7 @@ function previewAllocation(turn) {
     const total = l.invested + l.cash;
     const interest = loanInterest(total, lr.rate);
     setText(`t${turn}_loan_rate`, `이번 턴 금리 ${lr.rate}%`);
-    const basis = `<p>금리 근거: ${lr.basis} + 은행 가산금리 ${LOAN.spread}%p = ${lr.rate}%</p>`;
+    const basis = `<p>금리 근거: ${lr.basis}</p>`;
     document.getElementById(`t${turn}_loan_info`).innerHTML = stageOf(turn) >= 4
         ? basis + `<p>${total ? `이번 턴 대출 ${fmt(total)}만 원, 원금과 이자 ${fmt(total + interest)}만 원 <strong>상환 완료</strong>` : '이번 턴에는 대출을 받지 않았습니다.'}</p>`
         : basis +
