@@ -91,7 +91,7 @@
             grid-area: 1 / 1; position: relative; aspect-ratio: 537 / 230;
             background: center bottom / cover no-repeat; image-rendering: pixelated;
         }
-        .hero { position: absolute; left: 63%; bottom: 19%; width: calc(var(--w) * 2); height: auto; }
+        .hero { position: absolute; left: 63%; bottom: 19%; width: var(--w); height: auto; }
         .status {
             position: relative; /* 장면(.scene) 위에 그려지도록 */
             grid-area: 1 / 1; align-self: start; justify-self: start; margin: 14px;
@@ -363,7 +363,7 @@
             .tab-btn { min-width: 78px; }
             .stage { display: block; }
             .status { justify-self: stretch; margin: 0; border-width: 3px 0 0; box-shadow: none; }
-            .hero { width: var(--w); }
+            .hero { width: calc(var(--w) / 2); image-rendering: auto; }
             .portrait { width: var(--w); }
             .alloc, .asset-calc-grid { grid-template-columns: 1fr; }
             .alloc-item { flex-direction: row; flex-wrap: wrap; justify-content: space-between; padding-bottom: 14px; border-bottom: 3px solid var(--navy-2); }
@@ -418,7 +418,7 @@
     <div id="turn5" class="turn-page" style="display:none;">
         <div class="stage">
             <div class="scene" style="background-image:url('assets/street-night.png')">
-                <img class="hero" src="assets/hero-64.png" alt="" width="28" height="58" style="--w:28px">
+                <img class="hero" src="assets/hero-64.png" alt="" width="59" height="125" style="--w:59px">
             </div>
             <div class="window status">
                 <img class="portrait" src="assets/portrait-64.png" alt="64세의 나" width="48" height="62" style="--w:48px">
@@ -577,7 +577,7 @@ const ASSETS = [['dep', '예금'], ['stk', '주식'], ['bnd', '채권']];
 const BUILDING = { dep: 'bank', stk: 'stock', bnd: 'bond' };
 // 도트 그림의 원래 크기(px). 화면에는 이 크기의 정수배로 그려야 픽셀이 고르게 보임
 const SPRITE_SIZE = {
-    'hero-25': [27, 57], 'hero-35': [27, 58], 'hero-45': [28, 59], 'hero-55': [28, 58],
+    'hero-25': [58, 124], 'hero-35': [59, 127], 'hero-45': [60, 126], 'hero-55': [62, 126],
     'portrait-25': [46, 61], 'portrait-35': [50, 61], 'portrait-45': [49, 62], 'portrait-55': [50, 62],
     bank: [106, 96], stock: [112, 90], bond: [112, 95]
 };
