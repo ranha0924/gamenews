@@ -656,6 +656,21 @@ const sideJob = {
     ]
 };
 
+// 스타트업 진로: 1턴에 스타트업으로 이직하면 2~4턴마다 둘 중 하나를 고름 (1턴 결과가 성공이든 실패든)
+// - 계속 다니기: 1턴과 같은 운 대결 (거는 돈으로 성공 확률·금액이 정해짐)
+// - 취직하기: 지금 연봉 그대로 회사원이 되고, 다음 턴부터는 진로 선택이 사라짐
+const startupStay = {
+    title: '스타트업 계속 다니기', good: '성공하면 큰돈을 벌고 연봉이 크게 올라요', bad: '실패하면 돈을 잃고 연봉이 깎여요',
+    luck: {
+        success: { desc: '성공! 회사가 크게 성장해 스톡옵션 대박이 났습니다.', cash: 8000, salary: 20 },
+        fail: { desc: '실패… 회사가 어려워져 소득 공백이 생기고 연봉도 깎였습니다.', cash: -3000, salary: -10 }
+    }
+};
+const startupQuit = {
+    title: '회사에 취직하기', job: true, good: '지금 연봉 그대로 안정적으로 일해요', bad: '다시는 스타트업으로 돌아갈 수 없어요',
+    outcome: { desc: '스타트업을 그만두고 회사에 취직했습니다. 지금 연봉 그대로 일합니다.', cash: 0, salary: 0 }
+};
+
 // 턴별 선택 사항 (수정사항: 선택지 2~3개로 확장 & 결과 비공개)
 // outcomes: 선택 완료 시 확률(prob, %)에 따라 하나가 정해짐 / luck: 운 요소 (턴마다 1개, 거는 돈으로 성공 확률·금액이 정해짐)
 // 일반 선택지(운 요소 제외)는 비용(cost)이 들지만 그보다 큰 이익(gain: 수익, salary: 연봉 상승률 %)이 생김
@@ -672,7 +687,8 @@ const choices = {
           outcomes: [
             { prob: 100, desc: '차값과 유지비가 들었지만, 외근·영업에 차를 적극 활용해 실적이 올랐습니다.', cost: 3000, salary: 2 }
           ] },
-        { title: '스타트업 이직', good: '성공하면 큰돈을 벌고 연봉이 크게 올라요', bad: '실패하면 돈을 잃고 연봉이 깎여요',
+        { title: '스타트업 이직', startup: true, good: '성공하면 큰돈을 벌고 연봉이 크게 올라요', bad: '실패하면 돈을 잃고 연봉이 깎여요',
+          note: '2턴부터 매 턴 스타트업을 계속 다닐지, 회사에 취직할지 고를 수 있어요',
           luck: {
             success: { desc: '성공! 회사가 상장(IPO)해 스톡옵션 대박이 났습니다.', cash: 8000, salary: 20 },
             fail: { desc: '실패… 회사가 폐업해 재취업까지 소득 공백이 생기고 연봉도 깎였습니다.', cash: -3000, salary: -10 }
@@ -846,6 +862,7 @@ function turnPageHtml(t) {
             <p class="sub-note">30세에 결혼한다고 가정합니다. 고른 가정 형태는 3턴(54세)까지 유지되며, 매 턴 선택 완료 시 정산됩니다.</p>
             <div class="choice-list" id="t1_household"></div>` : ''}
             ${HOUSEHOLD_YEARS[t] && t > 1 ? `<p class="household-note" id="t${t}_household_note"></p>` : ''}
+            ${t > 1 ? `<div id="t${t}_career" style="display:none;"></div>` : ''}
             <h4 class="menu-title">선택 사항<small>결과는 선택 완료 후 공개</small></h4>
             <p class="sub-note">원하는 항목을 자유롭게 고르세요. 주사위가 그려진 운 선택지는 거는 돈을 정할 수 있습니다. 선택 완료를 누르면 결과가 공개되고, 이후에는 되돌릴 수 없습니다.</p>
             <div class="choice-list" id="t${t}_choices"></div>
@@ -903,8 +920,23 @@ const choiceCost = c => (c.outcomes && c.outcomes.every(o => o.cost !== undefine
 function briefHtml(c) {
     const cost = choiceCost(c);
     const pay = c.pay ? `<span class="c-line"><span class="c-tag">드는 돈</span>${cost !== null ? `${fmt(cost)}만 원 (${c.pay})` : c.pay}</span>` : '';
-    return `<span class="c-brief">${pay}${c.good ? `<span class="c-line up">▲ ${c.good}</span>` : ''}${c.bad ? `<span class="c-line down">▼ ${c.bad}</span>` : ''}</span>`;
+    return `<span class="c-brief">${pay}${c.good ? `<span class="c-line up">▲ ${c.good}</span>` : ''}${c.bad ? `<span class="c-line down">▼ ${c.bad}</span>` : ''}${c.note ? `<span class="c-line muted">${c.note}</span>` : ''}</span>`;
 }
+const luckBadge = c => c.luck ? ' <span class="c-luck"><span class="dice-ico" aria-hidden="true"></span>운</span>' : '';
+
+// 운 선택지의 거는 돈 입력 (i: 선택지 번호, 진로 선택은 'career')
+const stakeHtml = (turn, i) => `
+            <div class="c-stake">
+                <div class="c-stake-row">
+                    <label for="t${turn}_c_${i}_stake">거는 돈</label>
+                    <button type="button" class="nudge" onclick="stepStake(${turn}, '${i}', -1)" aria-label="거는 돈 1,000만 원 줄이기">-</button>
+                    <input type="number" id="t${turn}_c_${i}_stake" min="${STAKE.min}" max="${STAKE.max}" step="${STAKE.step}" value="${STAKE.base}" inputmode="numeric" oninput="updateStake(${turn}, '${i}')">
+                    <span>만 원</span>
+                    <button type="button" class="nudge" onclick="stepStake(${turn}, '${i}', 1)" aria-label="거는 돈 1,000만 원 늘리기">+</button>
+                    <span class="c-stake-won" id="t${turn}_c_${i}_won">= ${wonText(STAKE.base)}</span>
+                </div>
+                <p class="c-stake-note">5,000만~1억 5,000만 원, 1,000만 원 단위. 성공하면 건 돈 이상 수익, 실패하면 거는 돈에 비례해 손실</p>
+            </div>`;
 
 // 선택 사항 메뉴 렌더링 (드는 돈은 보여 주고, 실제 결과와 금액은 선택 완료 후 공개)
 function renderChoices(turn) {
@@ -913,27 +945,53 @@ function renderChoices(turn) {
             <label class="choice-main" for="t${turn}_c_${i}">
                 <input type="checkbox" class="pix-box" id="t${turn}_c_${i}" onchange="this.closest('.choice-card').classList.toggle('selected', this.checked)">
                 <span class="c-body">
-                    <span class="c-title">${c.title}${c.luck ? ' <span class="c-luck"><span class="dice-ico" aria-hidden="true"></span>운</span>' : ''}</span>
+                    <span class="c-title">${c.title}${luckBadge(c)}</span>
                     ${briefHtml(c)}
                     <span class="c-lock">결과: ??? (선택 완료 후 공개)</span>
                     ${c.requires ? `<span class="c-req" id="t${turn}_c_${i}_req"></span>` : ''}
                 </span>
             </label>
-            ${c.luck ? `
-            <div class="c-stake">
-                <div class="c-stake-row">
-                    <label for="t${turn}_c_${i}_stake">거는 돈</label>
-                    <button type="button" class="nudge" onclick="stepStake(${turn}, ${i}, -1)" aria-label="거는 돈 1,000만 원 줄이기">-</button>
-                    <input type="number" id="t${turn}_c_${i}_stake" min="${STAKE.min}" max="${STAKE.max}" step="${STAKE.step}" value="${STAKE.base}" inputmode="numeric" oninput="updateStake(${turn}, ${i})">
-                    <span>만 원</span>
-                    <button type="button" class="nudge" onclick="stepStake(${turn}, ${i}, 1)" aria-label="거는 돈 1,000만 원 늘리기">+</button>
-                    <span class="c-stake-won" id="t${turn}_c_${i}_won">= ${wonText(STAKE.base)}</span>
-                </div>
-                <p class="c-stake-note">5,000만~1억 5,000만 원, 1,000만 원 단위. 성공하면 건 돈 이상 수익, 실패하면 거는 돈에 비례해 손실</p>
-            </div>` : ''}
+            ${c.luck ? stakeHtml(turn, i) : ''}
         </div>
     `).join('');
     updateChoiceAvailability(turn);
+}
+
+// 이번 턴에 스타트업에 다니고 있는지: 1턴에 스타트업으로 이직했고, 그 뒤로 취직을 고르지 않았으면 계속 스타트업
+function atStartup(turn) {
+    if (turn < 2 || !records[1] || !records[1].picks.some(pk => pk.choice.startup)) return false;
+    for (let t = 2; t < turn; t++) if (!records[t] || records[t].career !== 'startup') return false;
+    return true;
+}
+
+// 2~4턴 진로 고르기 (필수 택1, 스타트업에 다니는 경우만): 한 번 그린 뒤에는 고른 값을 유지
+function renderCareer(turn) {
+    const box = document.getElementById(`t${turn}_career`);
+    if (!box) return;
+    const show = atStartup(turn);
+    box.style.display = show ? '' : 'none';
+    if (!show || box.innerHTML) return;
+    box.innerHTML = `
+        <h4 class="menu-title">진로 고르기<small>필수, 하나만 고르세요. 1턴에 스타트업으로 이직해서 고를 수 있어요</small></h4>
+        <div class="choice-list">${[['stay', startupStay], ['job', startupQuit]].map(([key, c]) => `
+            <div class="choice-card">
+                <label class="choice-main" for="t${turn}_career_${key}">
+                    <input type="radio" class="pix-box" name="t${turn}_career" id="t${turn}_career_${key}" value="${key}" onchange="syncCareer(${turn})">
+                    <span class="c-body">
+                        <span class="c-title">${c.title}${luckBadge(c)}</span>
+                        ${briefHtml(c)}
+                        ${c.luck ? '<span class="c-lock">결과: ??? (선택 완료 후 공개)</span>' : ''}
+                    </span>
+                </label>
+                ${c.luck ? stakeHtml(turn, 'career') : ''}
+            </div>`).join('')}
+        </div>`;
+}
+
+function syncCareer(turn) {
+    document.querySelectorAll(`#t${turn}_career .choice-card`).forEach(card => {
+        card.classList.toggle('selected', card.querySelector('input').checked);
+    });
 }
 
 // 가정 형태 조건이 있는 선택 사항(부업): 조건이 안 맞으면 안내 문구와 함께 선택 불가
@@ -1017,6 +1075,7 @@ function turnBase(turn) {
 function refreshTurn(turn) {
     const cfg = config[turn];
     const b = turnBase(turn);
+    renderCareer(turn);
     if (turn > 1) {
         const prevEl = document.getElementById(`t${turn}_prev_txt`);
         prevEl.innerText = b.carry < 0 ? `빚 ${fmt(-b.carry)}` : fmt(b.carry);
@@ -1326,14 +1385,28 @@ function completeChoices(turn) {
     const selected = choices[turn]
         .map((choice, i) => ({ choice, i }))
         .filter(({ choice, i }) => !(choice.requires && choice.requires !== hhKey) && document.getElementById(`t${turn}_c_${i}`).checked);
-    if (selected.some(({ choice, i }) => choice.luck && !validStake(readStake(turn, i)))) {
+    // 진로 (스타트업에 다니는 경우만): 계속 다니기 = 'startup', 취직하기 = 'job'
+    let career = null;
+    if (atStartup(turn)) {
+        const careerInput = document.querySelector(`input[name="t${turn}_career"]:checked`);
+        if (!careerInput) {
+            alert("진로(스타트업 계속 다니기 / 회사에 취직하기) 중 하나를 선택하세요!");
+            return;
+        }
+        career = careerInput.value === 'stay' ? 'startup' : 'job';
+    }
+    if (selected.some(({ choice, i }) => choice.luck && !validStake(readStake(turn, i))) ||
+        (career === 'startup' && !validStake(readStake(turn, 'career')))) {
         alert("거는 돈은 5,000만~1억 5,000만 원 사이에서 1,000만 원 단위로 입력하세요!");
         return;
     }
 
     const cfg = config[turn];
     const b = turnBase(turn);
-    const picks = selected.map(({ choice, i }) => ({
+    const picks = [];
+    if (career === 'startup') picks.push({ choice: startupStay, outcome: resolveOutcome(startupStay, b.salary, turn, readStake(turn, 'career')) });
+    if (career === 'job') picks.push({ choice: startupQuit, outcome: { ...startupQuit.outcome } });
+    selected.forEach(({ choice, i }) => picks.push({
         choice,
         outcome: resolveOutcome(choice, b.salary, turn, choice.luck ? readStake(turn, i) : 0)
     }));
@@ -1365,7 +1438,7 @@ function completeChoices(turn) {
     // 투자 가능 여유 자금 = 이월금 + 10년 잉여 자금 - 필수 지출 ± 가정 형태 ± 선택 결과 ± 연봉 변화 소득
     const avail = b.carry + b.surplus - cfg.req + householdNet + choiceCash + salaryIncomeDelta;
 
-    records[turn] = { stage: 1, ...b, picks, choiceCash, multAfter, salaryAfter, salaryIncomeDelta, household: hh, householdNet, avail };
+    records[turn] = { stage: 1, ...b, picks, career, choiceCash, multAfter, salaryAfter, salaryIncomeDelta, household: hh, householdNet, avail };
     updateStepUI(turn);
     previewAllocation(turn);
     renderChoiceResult(turn);
@@ -1556,7 +1629,7 @@ function renderChoiceResult(turn) {
         ['필수', cfg.reqLabel, -cfg.req, true]
     ];
     if (hh) flowRows.push(['가정', `${hh.title} (${hh.dualIncome ? `배우자 소득 ${signed(hh.spouseIncome)}만, ` : ''}육아비 ${signed(-hh.childcare)}만)`, hh.net, true]);
-    rec.picks.forEach(({ choice, outcome }) => {
+    rec.picks.filter(({ choice }) => !choice.job).forEach(({ choice, outcome }) => {
         const g = outcome.general;
         const detail = outcome.luck ? ` (${outcome.luck.success ? '성공' : '실패'})`
             : g ? ` (비용 ${signed(-g.cost)}만${g.gain ? `, 수익 ${signed(g.gain)}만` : ''})` : '';
@@ -1765,6 +1838,8 @@ function initGame() {
         });
         markChest(t, null);
         document.getElementById(`t${t}_sc_info`).innerHTML = '';
+        const careerBox = document.getElementById(`t${t}_career`);
+        if (careerBox) { careerBox.innerHTML = ''; careerBox.style.display = 'none'; }
         updateStepUI(t);
     }
 
