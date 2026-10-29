@@ -1735,6 +1735,10 @@ function renderFinalResult(turn) {
     const prevLabel = turn === 1 ? '시드머니' : `${turn - 1}턴 이월금`;
     const totalLabel = turn < 4 ? `${turn + 1}턴으로 이월되는 총 자금` : '64세 은퇴 시점 총 자금';
     const growth = rec.final - rec.carry;
+    // 증감률: 이번 턴 시작 금액(시드머니·지난 턴 이월금) 대비, 시작 금액이 0 이하(빚)면 비율을 계산하지 않음
+    const growthRate = rec.carry > 0 ? growth / rec.carry * 100 : null;
+    const growthRateText = growthRate === null ? ' (시작 금액이 0 이하라 증감률은 계산하지 않아요)'
+        : growth > 0 ? ` (${pctText(growthRate)} 증가)` : growth < 0 ? ` (${pctText(growthRate)} 감소)` : ' (변화 없음)';
     const parts = ASSETS.map(([k, label]) => `${label} ${fmt(rec.res[k])}만`).join(' + ') + (rec.debt < 0 ? ` + 부채 ${signed(rec.debt)}만` : '');
     // 대출 효과: 빌린 돈이 평균 수익률만큼 번 돈 - 이자
     const avgRate = ASSETS.reduce((sum, [k]) => sum + rec.p[k] * rec.r[k], 0) / 100;
@@ -1775,7 +1779,7 @@ function renderFinalResult(turn) {
             <h4><span class="step-num">3</span>${totalLabel}</h4>
             <div class="total-value">${fmt(rec.final)}<span class="unit">만 원</span></div>
             ${rec.final < 0 ? `<p class="debt-note">내 돈이 마이너스(빚 ${fmt(-rec.final)}만 원)가 됐어요. ${turn < 4 ? '다음 턴은 이 빚을 안고 시작합니다.' : '은퇴 시점에 빚이 남았습니다.'}</p>` : ''}
-            <div class="total-diff">${prevLabel} ${fmt(rec.carry)}만 원 대비 <span class="${toneClass(growth)}">${signed(growth)}만 원</span></div>
+            <div class="total-diff">${prevLabel} ${fmt(rec.carry)}만 원 대비 <span class="${toneClass(growth)}">${signed(growth)}만 원${growthRateText}</span></div>
             <div class="total-breakdown">
                 투자 가능 여유 자금 ${fmt(rec.avail)}만 원${rec.loanInvested ? ` + 대출 ${fmt(rec.loanInvested)}만 원` : ''} → ${parts} = ${rec.loan ? `${fmt(rec.investFinal)}만 원<br>
                 ${rec.loanCash ? `현금으로 보관한 대출 ${signed(rec.loanCash)}만, ` : ''}대출 상환: 원금 ${signed(-rec.loan)}만 + 이자 ${signed(-rec.loanInterest)}만 → ` : ''}${fmt(rec.final)}만 원
