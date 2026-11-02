@@ -111,9 +111,12 @@
         .loan-head { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
         .loan-head h3 { font: 700 24px/1.2 var(--px); }
         .loan-rate { margin-left: auto; font: 15px/1.2 var(--px-text); color: var(--yellow); }
-        .loan-lock { display: none; align-items: center; gap: 8px; font: 15px/1.2 var(--px-text); color: var(--muted); }
-        .loan-lock::before { content: ''; width: 20px; height: 22px; background: url('assets/lock.png') no-repeat center / contain; image-rendering: pixelated; }
-        .loan.locked .loan-lock { display: inline-flex; }
+        .loan-status { display: inline-flex; align-items: center; gap: 8px; font: 15px/1.2 var(--px-text); color: var(--muted); }
+        .loan-status::before { content: ''; width: 20px; height: 22px; background: no-repeat center / contain; image-rendering: pixelated; }
+        .loan.locked .loan-status::before { background-image: url('assets/lock.png'); }
+        .loan.active .loan-status { color: var(--yellow); }
+        .loan.active .loan-status::before { background-image: url('assets/cursor.png'); width: 16px; animation: blink 0.8s steps(1) infinite; }
+        .loan.done .loan-status::before { background-image: url('assets/check.png'); }
         .loan.locked > :not(.loan-head) { opacity: 0.4; }
         .loan.locked .loan-head h3 { opacity: 0.6; }
         .loan-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font: 15px/1.4 var(--px-text); }
@@ -481,9 +484,9 @@
 <main class="container">
     <section class="window guide" aria-label="진행 방법">
         <div>
-            <p><strong>1단계 선택 완료 → 2단계 자산 배분 확정 → 3단계 시나리오 상자(1~5) 열기 → 4단계 최종 완료</strong></p>
+            <p><strong>1단계 선택 완료 → 대출 완료 → 2단계 자산 배분 확정 → 3단계 시나리오 상자(1~5) 열기 → 4단계 최종 완료</strong></p>
             <p>선택 사항의 금액과 이익/손실 여부는 선택 완료를 눌러야 공개되고, 끝낸 단계는 되돌릴 수 없습니다.
-                대출은 1단계 선택 완료 후 1단계 바로 아래 대출 창에서 받을 수 있습니다. 최종 완료 후 화면 위의 다음 턴 칸을 눌러 넘어가세요.
+                대출은 1단계 선택 완료 후 바로 아래 대출 창에서 받고, [대출 완료]를 누르면 2단계가 열립니다(빌리지 않아도 눌러야 해요). 최종 완료 후 화면 위의 다음 턴 칸을 눌러 넘어가세요.
                 지난 턴은 4턴까지 모두 마친 뒤에 다시 볼 수 있습니다.</p>
         </div>
         <button type="button" class="btn-tutorial" onclick="openTutorial()">튜토리얼 다시 보기</button>
@@ -923,14 +926,14 @@ function turnPageHtml(t) {
         </section>
         <section class="window result" id="t${t}_choice_result" style="display:none;"></section>
 
-        <!-- 대출: 1단계 선택 완료 후부터 최종 완료 전까지 받을 수 있음 -->
+        <!-- 대출: 1단계 선택 완료 후 빌리고 [대출 완료]를 누르면 2단계가 열림 (대출 완료 후에는 더 빌릴 수 없음) -->
         <section class="window loan" id="t${t}_loan_box" aria-label="대출">
             <div class="loan-head">
                 <h3>대출</h3>
-                <span class="loan-lock" id="t${t}_loan_lock">1단계 선택 완료 후 이용 가능</span>
+                <span class="loan-status" id="t${t}_loan_status"></span>
                 <span class="loan-rate" id="t${t}_loan_rate"></span>
             </div>
-            <p class="sub-note">1단계 선택 완료 후부터 이번 턴 최종 완료 전까지 빌릴 수 있습니다. 한도 3억 원, 1,000만 원 단위이고, 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져갑니다.</p>
+            <p class="sub-note">1단계 선택 완료 후 필요한 만큼 빌리고 [대출 완료]를 누르세요. 빌린 돈은 2단계 투자 가능 금액에 더해지고, 대출 완료 후에는 이번 턴에 더 빌릴 수 없습니다. 한도 3억 원, 1,000만 원 단위이고, 턴(10년)이 끝나면 은행이 원금과 이자를 한꺼번에 가져갑니다.</p>
             <div class="loan-row">
                 <label for="t${t}_loan">빌릴 돈</label>
                 <button type="button" class="nudge" onclick="stepLoan(${t}, -1)" aria-label="빌릴 돈 1,000만 원 줄이기">-</button>
@@ -945,12 +948,13 @@ function turnPageHtml(t) {
                 <div><span>남은 한도</span><b id="t${t}_loan_left">${wonText(LOAN.max)}</b></div>
             </div>
             <div class="loan-info" id="t${t}_loan_info"></div>
+            <button class="btn-complete" id="t${t}_btn_loan_done" onclick="finishLoan(${t})"></button>
         </section>
 
         <!-- 2단계: 자산 배분 -->
         <section class="window step" id="t${t}_step2">
             ${stepHead(2, '자산 배분')}
-            <p class="avail">투자 가능 여유 자금 <strong id="t${t}_avail">-</strong><small>1단계 결과 반영</small></p>
+            <p class="avail">투자 가능 금액 <strong id="t${t}_avail">-</strong><small id="t${t}_avail_note">1단계 결과 + 대출 반영</small></p>
             <p id="t${t}_debt" class="warning">여유 자금이 마이너스입니다. 투자 없이 부족분(부채)이 그대로 이월됩니다.</p>
             ${t > 1 ? `<p class="sub-note">지난 턴에 확정한 비율에서 예금·주식·채권 각각 ±${ALLOC_LIMIT}%p까지만 바꿀 수 있습니다.</p>` : ''}
             <div class="alloc">${allocItems}</div>
@@ -1184,15 +1188,15 @@ function loanRateInfo(turn) {
 }
 const readLoan = turn => Number(document.getElementById(`t${turn}_loan`).value || 0);
 
-// 턴별 대출 현황: 자산 배분 확정 전에 빌린 돈은 투자, 확정 후에 빌린 돈은 현금으로 보관
-// (시나리오를 보고 나서 빌려 투자하는 것을 막기 위해)
+// 턴별 대출 현황: amount = 이번 턴에 빌린 돈 합계(모두 2단계에서 투자), done = [대출 완료]를 눌러 더 빌릴 수 없음
 let loans = {};
-const loanOf = turn => (loans[turn] = loans[turn] || { invested: 0, cash: 0 });
-const loanTotal = turn => loanOf(turn).invested + loanOf(turn).cash;
+const loanOf = turn => (loans[turn] = loans[turn] || { amount: 0, done: false });
+const loanTotal = turn => loanOf(turn).amount;
+const loanOpen = turn => stageOf(turn) === 1 && !loanOf(turn).done;  // 1단계 선택 완료 후 ~ 대출 완료 전에만 빌릴 수 있음
 
-// 대출 받기: 1단계 선택 완료 후부터 가능, 누르는 즉시 반영, 빌린 돈은 턴이 끝날 때 한꺼번에 갚음 (중간 상환 없음)
+// 대출 받기: 1단계 선택 완료 후 ~ 대출 완료 전까지 여러 번 가능, 빌린 돈은 턴이 끝날 때 한꺼번에 갚음 (중간 상환 없음)
 function takeLoan(turn) {
-    if (stageOf(turn) < 1 || stageOf(turn) >= 4) return;  // 1단계 선택 완료 전과 최종 완료 후에는 대출 불가
+    if (!loanOpen(turn)) return;
     const amount = readLoan(turn);
     if (!validLoan(amount) || amount === 0) {
         alert("대출 금액은 1,000만 원 단위로 입력하세요! (한도 3억 원)");
@@ -1203,9 +1207,18 @@ function takeLoan(turn) {
         alert(`대출 한도 3억 원을 넘을 수 없습니다. 남은 한도: ${fmt(remain)}만 원`);
         return;
     }
-    if (stageOf(turn) >= 2) loanOf(turn).cash += amount;
-    else loanOf(turn).invested += amount;
+    loanOf(turn).amount += amount;
+    updateStepUI(turn);
     previewAllocation(turn);
+}
+
+// 대출 완료: 이후 이번 턴에는 더 빌릴 수 없고, 2단계 자산 배분이 열림 (빌리지 않았어도 눌러야 함)
+function finishLoan(turn) {
+    if (!loanOpen(turn)) return;
+    loanOf(turn).done = true;
+    updateStepUI(turn);
+    previewAllocation(turn);
+    document.getElementById(`t${turn}_step2`).scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 const validLoan = loan => Number.isInteger(loan) && loan >= 0 && loan <= LOAN.max && loan % LOAN.step === 0;
 const loanInterest = (loan, rate) => Math.round(loan * rate / 100);
@@ -1267,14 +1280,10 @@ function previewAllocation(turn) {
         setText(`t${turn}_range_${k}`, r.prev === undefined ? '' : `지난 턴 ${r.prev}% → ${r.min}~${r.max}%`);
     });
 
-    const availEl = document.getElementById(`t${turn}_avail`);
-    availEl.innerText = rec ? `${fmt(rec.avail)}만 원` : '1단계 완료 후 계산';
-    availEl.classList.toggle('down', !!rec && rec.avail < 0);
-
     // 대출 현황 (1단계 선택 완료 전에는 잠겨 있지만 금리와 현황은 미리 보여 줌)
     const lr = loanRateInfo(turn);
     const l = loanOf(turn);
-    const total = l.invested + l.cash;
+    const total = l.amount;
     const interest = loanInterest(total, lr.rate);
     setText(`t${turn}_loan_rate`, `이번 턴 금리 ${lr.rate}%`);
     const repaid = stageOf(turn) >= 4;
@@ -1287,11 +1296,16 @@ function previewAllocation(turn) {
     setText(`t${turn}_loan_left`, wonText(LOAN.max - total));
     document.getElementById(`t${turn}_loan_info`).innerHTML = `<p>금리 근거: ${lr.basis}</p>` +
         (repaid ? '' : stageOf(turn) < 1 ? '<p>1단계 선택 완료를 누르면 대출을 받을 수 있습니다.</p>'
-            : stageOf(turn) < 2 ? '<p>자산 배분 확정 전에 빌린 돈은 투자 금액에 더해집니다.</p>' : '') +
-        (l.cash ? `<p>자산 배분 확정 후에 빌린 ${fmt(l.cash)}만 원은 투자되지 않고 현금으로 보관${repaid ? '했습니다' : '됩니다'}.</p>` : '');
+            : !l.done ? '<p>빌린 돈은 2단계 투자 가능 금액에 더해집니다. 다 빌렸으면 [대출 완료]를 누르세요.</p>'
+            : '<p>대출을 마쳤습니다. 이번 턴에는 더 빌릴 수 없습니다.</p>');
 
-    const loanInvested = rec && rec.stage >= 2 ? rec.loanInvested : l.invested;
+    // 투자 가능 금액 = 1단계 여유 자금 + 빌린 돈
+    const loanInvested = total;
     const funds = rec ? rec.avail + loanInvested : 0;
+    const availEl = document.getElementById(`t${turn}_avail`);
+    availEl.innerText = rec ? `${fmt(funds)}만 원` : '1단계 완료 후 계산';
+    availEl.classList.toggle('down', !!rec && funds < 0);
+    setText(`t${turn}_avail_note`, rec ? `1단계 여유 자금 ${fmt(rec.avail)}만 원 + 대출 ${fmt(loanInvested)}만 원` : '1단계 결과 + 대출 반영');
     document.getElementById(`t${turn}_debt`).style.display = rec && funds < 0 ? 'block' : 'none';
     const inv = rec ? investAmounts(funds, p) : null;
     setText(`t${turn}_alloc_preview`, inv && validAllocation(p)
@@ -1311,7 +1325,7 @@ function updateStepUI(turn) {
     const stage = stageOf(turn);
     const states = {
         1: stage >= 1 ? 'done' : 'active',
-        2: stage >= 2 ? 'done' : (stage === 1 ? 'active' : 'locked'),
+        2: stage >= 2 ? 'done' : (stage === 1 && loanOf(turn).done ? 'active' : 'locked'),
         3: stage >= 4 ? 'done' : (stage >= 2 ? 'active' : 'locked'),
         4: stage >= 4 ? 'done' : (stage === 3 ? 'active' : 'locked')
     };
@@ -1320,19 +1334,25 @@ function updateStepUI(turn) {
         const step = document.getElementById(`t${turn}_step${n}`);
         step.classList.remove('done', 'active', 'locked');
         step.classList.add(states[n]);
-        setText(`t${turn}_status${n}`, statusText[states[n]]);
+        setText(`t${turn}_status${n}`, n === 2 && states[n] === 'locked' && stage === 1 ? '대출 창에서 [대출 완료]를 먼저 누르세요' : statusText[states[n]]);
     }
 
     document.querySelectorAll(`#t${turn}_step1 input:not([data-fixed]), #t${turn}_step1 .nudge`).forEach(el => el.disabled = stage >= 1);
     if (stage === 0) updateChoiceAvailability(turn);
-    document.querySelectorAll(`#t${turn}_step2 input, #t${turn}_step2 .nudge`).forEach(el => { el.disabled = stage !== 1; });
+    document.querySelectorAll(`#t${turn}_step2 input, #t${turn}_step2 .nudge`).forEach(el => { el.disabled = states[2] !== 'active'; });
     document.querySelectorAll(`#t${turn}_sc .chest`).forEach(el => { el.disabled = stage < 2 || stage >= 4; });
-    document.querySelectorAll(`#t${turn}_loan_box input, #t${turn}_loan_box button`).forEach(el => { el.disabled = stage < 1 || stage >= 4; });
-    document.getElementById(`t${turn}_loan_box`).classList.toggle('locked', stage < 1);
+    // 대출 창: 1단계 선택 완료 전 잠금 → 빌리는 중 → 대출 완료 (이후 더 빌릴 수 없음)
+    const loanState = stage < 1 ? 'locked' : (loanOpen(turn) ? 'active' : 'done');
+    const loanBox = document.getElementById(`t${turn}_loan_box`);
+    loanBox.classList.remove('locked', 'active', 'done');
+    loanBox.classList.add(loanState);
+    setText(`t${turn}_loan_status`, { locked: '1단계 선택 완료 후 이용 가능', active: '진행 중', done: '대출 완료 (더 빌릴 수 없음)' }[loanState]);
+    document.querySelectorAll(`#t${turn}_loan_box input, #t${turn}_loan_box button`).forEach(el => { el.disabled = loanState !== 'active'; });
 
     [
         [`t${turn}_btn_choice`, stage === 0, stage >= 1 ? '선택 완료됨 (변경 불가)' : '선택 완료 (결과 확인)'],
-        [`t${turn}_btn_alloc`, stage === 1, stage >= 2 ? '자산 배분 확정됨 (변경 불가)' : '자산 배분 확정'],
+        [`t${turn}_btn_loan_done`, loanState === 'active', loanState === 'done' ? '대출 완료됨 (더 빌릴 수 없음)' : loanTotal(turn) ? '대출 완료' : '대출 받지 않고 완료'],
+        [`t${turn}_btn_alloc`, states[2] === 'active', stage >= 2 ? '자산 배분 확정됨 (변경 불가)' : '자산 배분 확정'],
         [`t${turn}_btn_final`, stage === 3, stage >= 4 ? `${turn}턴 최종 완료됨` : `${turn}턴 최종 완료 (이월 자금 확인)`]
     ].forEach(([id, enabled, label]) => {
         const btn = document.getElementById(id);
@@ -1529,7 +1549,7 @@ function completeChoices(turn) {
 // 2단계 자산 배분 확정 (이후 변경 불가)
 function confirmAllocation(turn) {
     const rec = records[turn];
-    if (!rec || rec.stage !== 1) return;
+    if (!rec || rec.stage !== 1 || !loanOf(turn).done) return;
     const p = readAllocation(turn);
     if (!validAllocation(p)) {
         alert("자산 배분 비율은 0 이상이고, 합이 100%가 되어야 합니다!");
@@ -1539,7 +1559,7 @@ function confirmAllocation(turn) {
         alert(`지난 턴 비율에서 종목마다 ±${ALLOC_LIMIT}%p까지만 바꿀 수 있습니다!\n${allocRangeText(turn)}`);
         return;
     }
-    const loanInvested = loanOf(turn).invested;  // 배분 확정 전에 빌린 돈은 함께 투자
+    const loanInvested = loanTotal(turn);  // 대출 완료 때까지 빌린 돈은 모두 함께 투자
     const funds = rec.avail + loanInvested;
     Object.assign(rec, { stage: 2, p, loanInvested, inv: investAmounts(funds, p), debt: Math.min(funds, 0) });
     updateStepUI(turn);
@@ -1577,12 +1597,11 @@ function applyScenario(turn, no) {
 function completeTurn(turn) {
     const rec = records[turn];
     if (!rec || rec.stage !== 3) return;
-    const l = loanOf(turn);
     const loanRate = loanRateInfo(turn);
-    const loan = l.invested + l.cash;
-    Object.assign(rec, { loan, loanCash: l.cash, loanRate, loanInterest: loanInterest(loan, loanRate.rate) });
-    // 턴이 끝나면 은행이 대출 원금과 이자를 가져감 (확정 후 빌려 현금으로 둔 돈은 투자 결과에 더함)
-    rec.final = rec.investFinal + rec.loanCash - rec.loan - rec.loanInterest;
+    const loan = loanTotal(turn);
+    Object.assign(rec, { loan, loanRate, loanInterest: loanInterest(loan, loanRate.rate) });
+    // 턴이 끝나면 은행이 대출 원금과 이자를 가져감
+    rec.final = rec.investFinal - rec.loan - rec.loanInterest;
     rec.stage = 4;
     updateStepUI(turn);
     previewAllocation(turn);
@@ -1742,7 +1761,7 @@ function renderChoiceResult(turn) {
             <h4><span class="step-num">3</span>필수·선택에 따른 금액 변화</h4>
             ${moneyFlow}
         </section>
-        <p class="next-hint">이제 바로 아래 대출 창에서 대출을 받을 수 있어요. 그다음 2단계에서 예금·주식·채권 비율을 정한 뒤 [자산 배분 확정]을 누르세요.</p>
+        <p class="next-hint">바로 아래 대출 창에서 필요한 만큼 빌린 뒤 [대출 완료]를 누르세요(빌리지 않으면 바로 누르면 돼요). 그러면 2단계 자산 배분이 열려요.</p>
     `;
     el.style.display = 'block';
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1807,13 +1826,10 @@ function renderFinalResult(turn) {
     const avgRate = ASSETS.reduce((sum, [k]) => sum + rec.p[k] * rec.r[k], 0) / 100;
     const loanGain = Math.round(rec.loanInvested * avgRate / 100);
     const loanNet = loanGain - rec.loanInterest;
-    const loanRows = rec.loan ? `${rec.loanCash ? `
-        <tr><td>현금으로 보관한 대출</td><td colspan="4" class="note-cell">자산 배분 확정 후에 빌려 투자하지 않은 돈</td><td class="up">${signed(rec.loanCash)}만</td></tr>` : ''}
+    const loanRows = rec.loan ? `
         <tr><td>대출 원금 상환</td><td colspan="4" class="note-cell">턴이 끝나 은행이 원금을 가져감</td><td class="down">${signed(-rec.loan)}만</td></tr>
         <tr><td>대출 이자</td><td colspan="4" class="note-cell">원금 ${fmt(rec.loan)}만 × 금리 ${rec.loanRate.rate}%</td><td class="down">${signed(-rec.loanInterest)}만</td></tr>` : '';
-    const loanEffect = rec.loan ? `<p class="loan-effect"><strong>대출 효과</strong>${rec.loanInvested
-            ? `투자한 대출 ${fmt(rec.loanInvested)}만 원이 내 투자 비율의 평균 수익률(${+avgRate.toFixed(1)}%)로 <span class="${toneClass(loanGain)}">${signed(loanGain)}만 원</span>을 벌었고,`
-            : '빌린 돈을 투자하지 않아 벌어들인 돈은 없고,'}
+    const loanEffect = rec.loan ? `<p class="loan-effect"><strong>대출 효과</strong>투자한 대출 ${fmt(rec.loanInvested)}만 원이 내 투자 비율의 평균 수익률(${+avgRate.toFixed(1)}%)로 <span class="${toneClass(loanGain)}">${signed(loanGain)}만 원</span>을 벌었고,
         이자 <span class="down">${signed(-rec.loanInterest)}만 원</span>을 냈어요.
         대출로 얻은 순효과는 <span class="${toneClass(loanNet)}">${signed(loanNet)}만 원</span>이에요.
         (${loanNet >= 0 ? '번 돈이 이자보다 커서 이득' : '번 돈이 이자보다 작아 손해'})</p>` : '';
@@ -1845,7 +1861,7 @@ function renderFinalResult(turn) {
             <div class="total-diff">${prevLabel} ${fmt(rec.carry)}만 원 대비 <span class="${toneClass(growth)}">${signed(growth)}만 원${growthRateText}</span></div>
             <div class="total-breakdown">
                 투자 가능 여유 자금 ${fmt(rec.avail)}만 원${rec.loanInvested ? ` + 대출 ${fmt(rec.loanInvested)}만 원` : ''} → ${parts} = ${rec.loan ? `${fmt(rec.investFinal)}만 원<br>
-                ${rec.loanCash ? `현금으로 보관한 대출 ${signed(rec.loanCash)}만, ` : ''}대출 상환: 원금 ${signed(-rec.loan)}만 + 이자 ${signed(-rec.loanInterest)}만 → ` : ''}${fmt(rec.final)}만 원
+                대출 상환: 원금 ${signed(-rec.loan)}만 + 이자 ${signed(-rec.loanInterest)}만 → ` : ''}${fmt(rec.final)}만 원
             </div>
         </section>
         <p class="next-hint">${nextHint}</p>
@@ -1952,7 +1968,7 @@ const TUTORIAL = [
     { title: '한 턴은 4단계', art: null,
         body: `<ol class="tut-steps">
                 <li><span class="step-label">1단계</span>지출과 선택: 꼭 내야 할 돈과 하고 싶은 선택 고르기</li>
-                <li class="loan-mid">↳ 1단계를 마치면 대출도 받을 수 있어요</li>
+                <li class="loan-mid">↳ 대출: 필요하면 빌리고 [대출 완료]를 눌러요 (빌린 돈도 투자돼요)</li>
                 <li><span class="step-label">2단계</span>자산 배분: 예금·주식·채권에 나눠 담기</li>
                 <li><span class="step-label">3단계</span>경제 시나리오: 상자를 열어 10년의 경제 확인</li>
                 <li><span class="step-label">4단계</span>최종 완료: 이번 턴 결과와 이월 자금 확인</li>
