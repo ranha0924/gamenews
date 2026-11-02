@@ -370,6 +370,41 @@
             font: 15px/1.2 var(--px-text); cursor: pointer;
         }
 
+        /* 시작 튜토리얼 (게임 시작 전 4쪽짜리 안내창) */
+        .tutorial {
+            width: min(560px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow-y: auto; margin: auto; padding: 0;
+            background: var(--navy); color: var(--white); border: 3px solid var(--white); box-shadow: 0 0 0 3px var(--navy);
+        }
+        .tutorial::backdrop { background: rgba(17, 20, 58, 0.75); }
+        .tut-inner { padding: 20px 22px 22px; }
+        .tut-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .tut-count { font: 700 12px/1 var(--px); color: var(--muted); }
+        .tut-skip { padding: 6px 10px; background: none; border: 2px solid var(--muted); border-radius: 0; font: 13px/1.2 var(--px-text); color: var(--muted); cursor: pointer; }
+        .tut-title { margin: 16px 0 14px; font: 700 24px/1.3 var(--px); color: var(--yellow); }
+        .tut-art { display: flex; justify-content: center; align-items: flex-end; gap: 16px; min-height: 110px; margin-bottom: 14px; padding: 12px; background: var(--navy-2); }
+        .tut-art img { width: calc(var(--w) * 2); height: auto; }
+        .tut-art .arrow { align-self: center; font: 700 24px/1 var(--px); color: var(--yellow); }
+        .tut-body p { margin: 0 0 8px; }
+        .tut-body strong { font: 15px/1.6 var(--px-text); color: var(--yellow); }
+        .tut-steps { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 6px; }
+        .tut-steps li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--navy-2); }
+        .tut-steps .step-label { flex: 0 0 auto; }
+        .tut-steps .loan-mid { background: none; padding: 0 10px; font-size: 13px; color: var(--muted); }
+        .tut-assets { display: grid; gap: 8px; margin-bottom: 10px; }
+        .tut-asset { display: flex; align-items: center; gap: 14px; padding: 8px 10px; background: var(--navy-2); }
+        .tut-asset img { flex: 0 0 auto; width: calc(var(--w) / 2); height: auto; image-rendering: auto; }
+        .tut-asset strong { display: block; }
+        .tut-dots { display: flex; justify-content: center; gap: 8px; margin: 16px 0 0; }
+        .tut-dots span { width: 10px; height: 10px; background: var(--navy-2); }
+        .tut-dots span.on { background: var(--yellow); }
+        .tut-nav { display: flex; gap: 10px; margin-top: 16px; }
+        .tut-nav button { flex: 1; padding: 12px 14px 15px; border: 3px solid var(--white); border-radius: 0; font: 15px/1.2 var(--px-text); cursor: pointer; }
+        .tut-prev { background: var(--navy-2); color: var(--white); box-shadow: inset 0 -4px 0 var(--navy-3); }
+        .tut-prev:disabled { visibility: hidden; }
+        .tut-next { background: var(--yellow); color: var(--navy); box-shadow: inset 0 -4px 0 var(--yellow-dark); }
+        .guide > div { flex: 1; }
+        .btn-tutorial { flex: 0 0 auto; padding: 6px 10px; background: var(--navy-2); border: 2px solid var(--white); border-radius: 0; font: 13px/1.2 var(--px-text); cursor: pointer; }
+
         @media (max-width: 900px) {
             .bld { width: var(--w); }
         }
@@ -403,6 +438,8 @@
             .btn-complete { font: 15px/1.4 var(--px-text); }
             .total-value { font-size: 36px; }
             .window { padding: 16px; }
+            .tut-inner { padding: 16px; }
+            .guide { flex-wrap: wrap; }
         }
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation: none !important; }
@@ -424,6 +461,23 @@
     </div>
 </header>
 
+<!-- 시작 튜토리얼: 처음 열면 보여 주고, 진행 방법 창의 [튜토리얼 다시 보기]로 다시 열 수 있음 -->
+<dialog class="tutorial" id="tutorial" aria-labelledby="tut_title">
+    <div class="tut-inner">
+        <div class="tut-top">
+            <span class="tut-count" id="tut_count"></span>
+            <button type="button" class="tut-skip" onclick="closeTutorial()">건너뛰기</button>
+        </div>
+        <h2 class="tut-title" id="tut_title"></h2>
+        <div id="tut_page"></div>
+        <div class="tut-dots" id="tut_dots" aria-hidden="true"></div>
+        <div class="tut-nav">
+            <button type="button" class="tut-prev" id="tut_prev" onclick="moveTutorial(-1)">이전</button>
+            <button type="button" class="tut-next" id="tut_next" onclick="moveTutorial(1)"></button>
+        </div>
+    </div>
+</dialog>
+
 <main class="container">
     <section class="window guide" aria-label="진행 방법">
         <div>
@@ -432,6 +486,7 @@
                 대출은 1단계 선택 완료 후 1단계 바로 아래 대출 창에서 받을 수 있습니다. 최종 완료 후 화면 위의 다음 턴 칸을 눌러 넘어가세요.
                 지난 턴은 4턴까지 모두 마친 뒤에 다시 볼 수 있습니다.</p>
         </div>
+        <button type="button" class="btn-tutorial" onclick="openTutorial()">튜토리얼 다시 보기</button>
     </section>
 
     <!-- 1~4턴 화면은 스크립트에서 만듦 (turnPageHtml) -->
@@ -1889,8 +1944,72 @@ function resetGame() {
     if (confirm('모든 기록을 지우고 1턴부터 다시 시작할까요?')) initGame();
 }
 
+// 시작 튜토리얼 (짧게 4쪽): 문구는 여기서 수정
+const TUTORIAL = [
+    { title: '인생 투자 여행', art: () => spriteImg('portrait-25', '', '25세의 나'),
+        body: `<p>25세부터 64세까지 인생을 <strong>4턴(한 턴에 10년)</strong>으로 나눠, 돈을 쓰고 모으고 불려 봅니다.</p>
+            <p>시작 자금은 <strong>1억 원</strong>. 64세에 얼마를 남길 수 있을까요?</p>` },
+    { title: '한 턴은 4단계', art: null,
+        body: `<ol class="tut-steps">
+                <li><span class="step-label">1단계</span>지출과 선택: 꼭 내야 할 돈과 하고 싶은 선택 고르기</li>
+                <li class="loan-mid">↳ 1단계를 마치면 대출도 받을 수 있어요</li>
+                <li><span class="step-label">2단계</span>자산 배분: 예금·주식·채권에 나눠 담기</li>
+                <li><span class="step-label">3단계</span>경제 시나리오: 상자를 열어 10년의 경제 확인</li>
+                <li><span class="step-label">4단계</span>최종 완료: 이번 턴 결과와 이월 자금 확인</li>
+            </ol>
+            <p>끝낸 단계는 <strong>되돌릴 수 없으니</strong> 신중하게 고르세요.</p>` },
+    { title: '예금·주식·채권', art: null,
+        body: `<div class="tut-assets">
+                <div class="tut-asset">${spriteImg('bank', '', '')}<div><strong>예금</strong>잃을 걱정 없이 이자가 조금씩 붙어요</div></div>
+                <div class="tut-asset">${spriteImg('stock', '', '')}<div><strong>주식</strong>크게 벌 수도, 크게 잃을 수도 있어요</div></div>
+                <div class="tut-asset">${spriteImg('bond', '', '')}<div><strong>채권</strong>예금과 주식의 중간쯤이에요</div></div>
+            </div>
+            <p>2턴부터는 지난 턴 비율에서 종목마다 <strong>±${ALLOC_LIMIT}%p</strong>까지만 바꿀 수 있어요.</p>` },
+    { title: '상자를 열면 경제가 보여요',
+        art: () => `<img src="assets/chest.png" alt="" width="49" height="54" style="--w:49px"><span class="arrow">→</span><img src="assets/chest-open.png" alt="" width="49" height="54" style="--w:49px">`,
+        body: `<p>상자 1~5번 중 하나를 열면 10년 동안의 경제 상황(금리 인상, 금융 위기 등)과 내 투자 결과가 공개돼요.</p>
+            <p><span class="up">빨강은 이익</span>, <span class="down">파랑은 손실</span>이에요. 한 턴을 마치면 화면 위의 다음 턴 칸을 눌러 넘어가세요.</p>` }
+];
+let tutorialPage = 0;
+
+function renderTutorial() {
+    const page = TUTORIAL[tutorialPage];
+    const last = tutorialPage === TUTORIAL.length - 1;
+    setText('tut_count', `${tutorialPage + 1} / ${TUTORIAL.length}`);
+    setText('tut_title', page.title);
+    document.getElementById('tut_page').innerHTML =
+        (page.art ? `<div class="tut-art" aria-hidden="true">${page.art()}</div>` : '') + `<div class="tut-body">${page.body}</div>`;
+    document.getElementById('tut_dots').innerHTML = TUTORIAL.map((_, i) => `<span class="${i === tutorialPage ? 'on' : ''}"></span>`).join('');
+    document.getElementById('tut_prev').disabled = tutorialPage === 0;
+    setText('tut_next', last ? '게임 시작!' : '다음');
+}
+function openTutorial() {
+    const dlg = document.getElementById('tutorial');
+    tutorialPage = 0;
+    renderTutorial();
+    if (!dlg.open) dlg.showModal();
+    document.getElementById('tut_next').focus();
+}
+function closeTutorial() {
+    const dlg = document.getElementById('tutorial');
+    if (dlg.open) dlg.close();
+}
+function moveTutorial(dir) {
+    const next = tutorialPage + dir;
+    if (next >= TUTORIAL.length) return closeTutorial();
+    tutorialPage = Math.max(0, next);
+    renderTutorial();
+    document.getElementById('tut_next').focus();
+}
+// 키보드: ← → 로 쪽 넘기기 (Esc는 브라우저가 창을 닫아 줌)
+document.getElementById('tutorial').addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') { e.preventDefault(); moveTutorial(1); }
+    if (e.key === 'ArrowLeft' && tutorialPage > 0) { e.preventDefault(); moveTutorial(-1); }
+});
+
 document.getElementById('turn-pages').innerHTML = [1, 2, 3, 4].map(turnPageHtml).join('');
 initGame();
+openTutorial();
 </script>
 </body>
 </html>
