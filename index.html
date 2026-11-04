@@ -255,6 +255,12 @@
         .chest.open::before { content: ''; position: absolute; top: 0; left: calc(50% - 10px); width: 20px; height: 18px; background: url('assets/down.png') no-repeat center / contain; image-rendering: pixelated; }
         .chest-no { font: 700 24px/1 var(--px); }
         .chest.open .chest-no { color: var(--yellow); }
+        /* 선생님 스위치: 선생님이 열어 주기 전에는 상자가 잠겨 있음 */
+        .step.waiting .step-status { color: var(--yellow); }
+        .step.waiting .step-status::before { background-image: url('assets/lock.png'); }
+        .gate-note { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 14px 0 0; padding: 10px 12px; background: var(--navy-2); font: 15px/1.5 var(--px-text); color: var(--yellow); text-align: center; }
+        .gate-note::before { content: ''; flex: 0 0 20px; height: 22px; background: url('assets/lock.png') no-repeat center / contain; image-rendering: pixelated; }
+        .gate-note[hidden] { display: none; }
         .scenario-card { margin-top: 12px; padding: 14px 16px; background: var(--navy-2); }
         .scenario-name { margin: 0; font: 700 24px/1.3 var(--px); color: var(--yellow); }
         .scenario-rates { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 8px 0 0; padding: 0; font: 15px/1.5 var(--px-text); }
@@ -408,6 +414,32 @@
         .guide > div { flex: 1; }
         .btn-tutorial { flex: 0 0 auto; padding: 6px 10px; background: var(--navy-2); border: 2px solid var(--white); border-radius: 0; font: 13px/1.2 var(--px-text); cursor: pointer; }
 
+        /* 선생님 화면 (주소 끝에 ?teacher) */
+        .teacher-login { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font: 15px/1.4 var(--px-text); }
+        .teacher-login input {
+            width: 200px; padding: 8px; border: 3px solid var(--white); border-radius: 0;
+            background: var(--navy-3); color: var(--white); font: 15px/1.2 var(--px-text);
+        }
+        .teacher-msg { margin: 12px 0 0; font: 15px/1.5 var(--px-text); color: var(--up); }
+        .teacher-msg[hidden] { display: none; }
+        .gate-list { display: grid; gap: 10px; margin-top: 4px; }
+        .gate-row { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; padding: 10px 14px; background: var(--navy-2); }
+        .gate-row .chest-img { flex: 0 0 auto; width: 49px; height: 54px; }
+        .gate-row.open .chest-img { background-image: url('assets/chest-open.png'); }
+        .gate-turn { flex: 1 1 140px; font: 15px/1.4 var(--px-text); }
+        .gate-turn small { display: block; font: 13px/1.4 var(--body); color: var(--muted); }
+        .gate-state { padding: 6px 8px; background: var(--navy-3); font: 700 12px/1 var(--px); color: var(--muted); }
+        .gate-row.open .gate-state { background: var(--yellow); color: var(--navy); }
+        .gate-row .btn-loan, .btn-lock { min-width: 104px; margin-left: 0; }
+        .btn-lock {
+            padding: 9px 14px; background: var(--navy-3); border: 3px solid var(--white); border-radius: 0;
+            font: 15px/1.2 var(--px-text); cursor: pointer;
+        }
+        .btn-lock:disabled { border-color: var(--navy-2); color: var(--muted); cursor: default; }
+        .teacher-tools { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+        .teacher-tools .btn-reset { margin: 0; }
+        .teacher-foot { margin: 14px 0 0; font-size: 13px; color: var(--muted); word-break: break-all; }
+
         @media (max-width: 900px) {
             .bld { width: var(--w); }
         }
@@ -435,7 +467,7 @@
             .loan-stats { grid-template-columns: 1fr 1fr; }
             .loan-stats .loan-total { grid-column: 1 / -1; }
             .loan-stats strong { font-size: 24px; }
-            .btn-loan { margin-left: 0; flex: 1 0 100%; }
+            .btn-loan, .gate-row .btn-lock { margin-left: 0; flex: 1 0 100%; }
             .c-stake-row > label { flex: 0 0 100%; }
             .c-stake-row input { width: 84px; }
             .btn-complete { font: 15px/1.4 var(--px-text); }
@@ -481,12 +513,36 @@
     </div>
 </dialog>
 
-<main class="container">
+<!-- 선생님 화면: 주소 끝에 ?teacher를 붙여 열면 게임 대신 이 화면이 보임 -->
+<main class="container" id="teacher-page" style="display:none;">
+    <section class="window" aria-labelledby="teacher_title">
+        <header class="step-head">
+            <span class="step-label">선생님</span><h3 id="teacher_title">시나리오 상자 열기</h3>
+        </header>
+        <form class="teacher-login" id="teacher_login" onsubmit="teacherLogin(event)">
+            <label for="teacher_pw">비밀번호</label>
+            <input type="password" id="teacher_pw" autocomplete="current-password">
+            <button type="submit" class="btn-loan" id="teacher_login_btn">확인</button>
+        </form>
+        <div id="teacher_panel" style="display:none;">
+            <p class="sub-note">턴마다 [열기]를 누르면 3단계에 있는 학생 화면의 상자가 몇 초 안에 열립니다. [잠그기]를 누르면 다시 잠겨서 상자를 고르거나 바꿀 수 없어요. 이미 상자를 고른 학생은 그 상자로 최종 완료할 수 있습니다.</p>
+            <div class="gate-list" id="teacher_turns"></div>
+            <div class="teacher-tools">
+                <button type="button" class="btn-reset" id="teacher_lock_all" onclick="teacherSet('all', false)">모두 잠그기 (다음 반 수업 준비)</button>
+                <button type="button" class="btn-reset" id="teacher_reload" onclick="teacherConnect()">상태 새로 고침</button>
+            </div>
+            <p class="teacher-foot" id="teacher_foot"></p>
+        </div>
+        <p class="teacher-msg" id="teacher_msg" role="alert" hidden></p>
+    </section>
+</main>
+
+<main class="container" id="game-page">
     <section class="window guide" aria-label="진행 방법">
         <div>
             <p><strong>1단계 선택 완료 → 대출 완료 → 2단계 자산 배분 확정 → 3단계 시나리오 상자(1~5) 열기 → 4단계 최종 완료</strong></p>
             <p>선택 사항의 금액과 이익/손실 여부는 선택 완료를 눌러야 공개되고, 끝낸 단계는 되돌릴 수 없습니다.
-                대출은 1단계 선택 완료 후 바로 아래 대출 창에서 받고, [대출 완료]를 누르면 2단계가 열립니다(빌리지 않아도 눌러야 해요). 최종 완료 후 화면 위의 다음 턴 칸을 눌러 넘어가세요.
+                대출은 1단계 선택 완료 후 바로 아래 대출 창에서 받고, [대출 완료]를 누르면 2단계가 열립니다(빌리지 않아도 눌러야 해요). 3단계 상자는 선생님이 열어 줘야 고를 수 있어요. 최종 완료 후 화면 위의 다음 턴 칸을 눌러 넘어가세요.
                 지난 턴은 4턴까지 모두 마친 뒤에 다시 볼 수 있습니다.</p>
         </div>
         <button type="button" class="btn-tutorial" onclick="openTutorial()">튜토리얼 다시 보기</button>
@@ -680,6 +736,16 @@ const VIEW = {
 // 금리 = 직전 턴에 뽑은 시나리오의 예금금리 그대로 / 1턴은 직전 턴이 없어 기본 금리를 씀
 // 게임의 자산 수익률이 턴마다 한 번 적용되는 것처럼, 대출 이자도 턴 전체에 한 번 적용
 const LOAN = { max: 30000, step: 1000, firstTurnBase: 3 };
+
+// 선생님 스위치: 3단계 상자는 선생님이 그 턴을 열어 줘야 고를 수 있음 (서버: api/gate.js)
+// - 선생님 화면(주소 끝에 ?teacher)에서 턴마다 [열기]/[잠그기]를 누르면, 3단계에 있는 학생 화면이 pollMs마다 확인해 상자를 열거나 잠금
+// - 서버 저장소가 연결되지 않았거나 index.html을 파일로 직접 열면 잠금 없이 예전처럼 바로 고를 수 있음
+const GATE = { url: '/api/gate', pollMs: 4000 };
+// mode: 'checking' 확인 중(잠금) / 'on' 선생님 스위치 사용 / 'off' 잠금 없음
+let gate = { mode: location.protocol === 'file:' ? 'off' : 'checking', open: {} };
+const gateOpen = turn => gate.mode === 'off' || gate.open[turn] === true;
+const TEACHER_MODE = new URLSearchParams(location.search).has('teacher');
+let currentTurn = 1;  // 지금 화면에 보이는 턴 (5: 최종 결과)
 
 // 턴별 기본 설정 (금액 단위: 만 원 / income·expense는 월 기준, 10년 잉여 자금 = (월 소득 - 월 생활비) × 120개월)
 const config = {
@@ -966,7 +1032,8 @@ function turnPageHtml(t) {
         <!-- 3단계: 경제 시나리오 (상자 번호를 고르면 내용과 투자 결과 공개) -->
         <section class="window step" id="t${t}_step3">
             ${stepHead(3, '경제 시나리오')}
-            <p class="sub-note">시나리오 번호(1~5)의 상자를 열면 이번 10년의 경제 시나리오와 투자 결과가 공개됩니다. 최종 완료 전까지는 다른 상자로 바꿀 수 있습니다.</p>
+            <p class="sub-note">선생님이 상자를 열어 주면 시나리오 번호(1~5)의 상자를 고를 수 있고, 이번 10년의 경제 시나리오와 투자 결과가 공개됩니다. 최종 완료 전까지는 다른 상자로 바꿀 수 있습니다 (선생님이 다시 잠그면 바꿀 수 없어요).</p>
+            <p class="gate-note" id="t${t}_gate" role="status" hidden></p>
             <div class="chests" id="t${t}_sc" role="group" aria-label="경제 시나리오 상자">${chests}</div>
             <div id="t${t}_sc_info"></div>
             <div class="asset-calc-grid">${calcCards}</div>
@@ -1125,6 +1192,7 @@ function turnStart(turn) {
 function showTurn(turn) {
     const tab = document.getElementById('tab' + turn);
     if (tab.disabled) return;
+    currentTurn = turn;
 
     document.querySelectorAll('.turn-page').forEach(el => el.style.display = 'none');
     document.getElementById('turn' + turn).style.display = 'block';
@@ -1139,6 +1207,7 @@ function showTurn(turn) {
     } else {
         refreshTurn(turn);
     }
+    pollGate();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1326,21 +1395,30 @@ function updateStepUI(turn) {
     const states = {
         1: stage >= 1 ? 'done' : 'active',
         2: stage >= 2 ? 'done' : (stage === 1 && loanOf(turn).done ? 'active' : 'locked'),
-        3: stage >= 4 ? 'done' : (stage >= 2 ? 'active' : 'locked'),
+        // 3단계는 선생님이 그 턴의 상자를 열어 줘야 고를 수 있음 (잠겨 있으면 'waiting')
+        3: stage >= 4 ? 'done' : (stage >= 2 ? (gateOpen(turn) ? 'active' : 'waiting') : 'locked'),
         4: stage >= 4 ? 'done' : (stage === 3 ? 'active' : 'locked')
     };
-    const statusText = { done: '완료 (변경 불가)', active: '진행 중', locked: '앞 단계를 먼저 완료하세요' };
+    const statusText = {
+        done: '완료 (변경 불가)', active: '진행 중', locked: '앞 단계를 먼저 완료하세요',
+        waiting: stage === 3 ? '선생님이 상자를 잠갔어요' : '선생님이 열어 줄 때까지 대기'
+    };
     for (let n = 1; n <= 4; n++) {
         const step = document.getElementById(`t${turn}_step${n}`);
-        step.classList.remove('done', 'active', 'locked');
+        step.classList.remove('done', 'active', 'locked', 'waiting');
         step.classList.add(states[n]);
         setText(`t${turn}_status${n}`, n === 2 && states[n] === 'locked' && stage === 1 ? '대출 창에서 [대출 완료]를 먼저 누르세요' : statusText[states[n]]);
     }
+    const gateNote = document.getElementById(`t${turn}_gate`);
+    gateNote.hidden = states[3] !== 'waiting';
+    gateNote.innerText = gate.mode === 'checking' ? '선생님 화면과 연결하는 중이에요…'
+        : stage === 3 ? '선생님이 상자를 잠갔어요. 지금 고른 상자로 최종 완료하세요.'
+        : '선생님이 상자를 열어 줄 때까지 기다려요. 열리면 저절로 고를 수 있어요.';
 
     document.querySelectorAll(`#t${turn}_step1 input:not([data-fixed]), #t${turn}_step1 .nudge`).forEach(el => el.disabled = stage >= 1);
     if (stage === 0) updateChoiceAvailability(turn);
     document.querySelectorAll(`#t${turn}_step2 input, #t${turn}_step2 .nudge`).forEach(el => { el.disabled = states[2] !== 'active'; });
-    document.querySelectorAll(`#t${turn}_sc .chest`).forEach(el => { el.disabled = stage < 2 || stage >= 4; });
+    document.querySelectorAll(`#t${turn}_sc .chest`).forEach(el => { el.disabled = states[3] !== 'active'; });
     // 대출 창: 1단계 선택 완료 전 잠금 → 빌리는 중 → 대출 완료 (이후 더 빌릴 수 없음)
     const loanState = stage < 1 ? 'locked' : (loanOpen(turn) ? 'active' : 'done');
     const loanBox = document.getElementById(`t${turn}_loan_box`);
@@ -1564,6 +1642,7 @@ function confirmAllocation(turn) {
     Object.assign(rec, { stage: 2, p, loanInvested, inv: investAmounts(funds, p), debt: Math.min(funds, 0) });
     updateStepUI(turn);
     previewAllocation(turn);
+    pollGate();  // 3단계에 들어서면 바로 선생님 스위치를 확인하고, 이후 몇 초마다 다시 확인
 }
 
 // 고른 상자만 열린 모양으로
@@ -1575,10 +1654,43 @@ function markChest(turn, no) {
     });
 }
 
+// 선생님 스위치 확인: 지금 화면의 턴이 3단계(상자 고르기)에 있을 때만 서버에 물어봄
+const gateNeeded = () => gate.mode !== 'off' && !document.hidden && currentTurn <= 4 && [2, 3].includes(stageOf(currentTurn));
+let gateTimer = null, gateBusy = false;
+
+async function fetchGate() {
+    if (gate.mode === 'off' || gateBusy) return;
+    gateBusy = true;
+    try {
+        const resp = await fetch(GATE.url, { headers: { Accept: 'application/json' } });
+        if (resp.status === 404) {
+            gate.mode = 'off';  // 서버 기능이 없는 곳(내 컴퓨터의 정적 서버 등)에서 연 경우
+        } else if (resp.ok) {
+            const data = await resp.json().catch(() => null);
+            if (!data || data.configured === false || !data.open) gate.mode = 'off';  // 저장소 미연결
+            else gate = { mode: 'on', open: data.open };
+        }
+        // 그 밖의 서버 오류는 마지막으로 확인한 상태를 그대로 두고 다음에 다시 확인
+    } catch (err) {
+        // 인터넷이 잠깐 끊긴 경우: 다음에 다시 확인
+    } finally {
+        gateBusy = false;
+    }
+    for (let t = 1; t <= 4; t++) if ([2, 3].includes(stageOf(t))) updateStepUI(t);
+}
+
+async function pollGate() {
+    clearTimeout(gateTimer);
+    gateTimer = null;
+    if (!gateNeeded()) return;
+    await fetchGate();
+    if (gateNeeded() && !gateTimer) gateTimer = setTimeout(pollGate, GATE.pollMs);
+}
+
 // 3단계 시나리오 선택: 상자 번호(1~5)를 고르면 시나리오 내용과 투자 결과 공개 (최종 완료 전까지는 다시 고를 수 있음)
 function applyScenario(turn, no) {
     const rec = records[turn];
-    if (!rec || rec.stage < 2 || rec.stage >= 4) return;
+    if (!rec || rec.stage < 2 || rec.stage >= 4 || !gateOpen(turn)) return;
     const sc = scenarios[no];
     const r = { dep: sc.dep, stk: sc.stk, bnd: sc.bnd };
     const res = {};
@@ -1970,7 +2082,7 @@ const TUTORIAL = [
                 <li><span class="step-label">1단계</span>지출과 선택: 꼭 내야 할 돈과 하고 싶은 선택 고르기</li>
                 <li class="loan-mid">↳ 대출: 필요하면 빌리고 [대출 완료]를 눌러요 (빌린 돈도 투자돼요)</li>
                 <li><span class="step-label">2단계</span>자산 배분: 예금·주식·채권에 나눠 담기</li>
-                <li><span class="step-label">3단계</span>경제 시나리오: 상자를 열어 10년의 경제 확인</li>
+                <li><span class="step-label">3단계</span>경제 시나리오: 선생님이 열어 주면 상자를 열어 10년의 경제 확인</li>
                 <li><span class="step-label">4단계</span>최종 완료: 이번 턴 결과와 이월 자금 확인</li>
             </ol>
             <p>끝낸 단계는 <strong>되돌릴 수 없으니</strong> 신중하게 고르세요.</p>` },
@@ -1983,7 +2095,7 @@ const TUTORIAL = [
             <p>2턴부터는 지난 턴 비율에서 종목마다 <strong>±${ALLOC_LIMIT}%p</strong>까지만 바꿀 수 있어요.</p>` },
     { title: '상자를 열면 경제가 보여요',
         art: () => `<img src="assets/chest.png" alt="" width="49" height="54" style="--w:49px"><span class="arrow">→</span><img src="assets/chest-open.png" alt="" width="49" height="54" style="--w:49px">`,
-        body: `<p>상자 1~5번 중 하나를 열면 10년 동안의 경제 상황(금리 인상, 금융 위기 등)과 내 투자 결과가 공개돼요.</p>
+        body: `<p>상자는 <strong>선생님이 열어 줘야</strong> 고를 수 있어요. 1~5번 중 하나를 열면 10년 동안의 경제 상황(금리 인상, 금융 위기 등)과 내 투자 결과가 공개돼요.</p>
             <p><span class="up">빨강은 이익</span>, <span class="down">파랑은 손실</span>이에요. 한 턴을 마치면 화면 위의 다음 턴 칸을 눌러 넘어가세요.</p>` }
 ];
 let tutorialPage = 0;
@@ -2023,9 +2135,131 @@ document.getElementById('tutorial').addEventListener('keydown', e => {
     if (e.key === 'ArrowLeft' && tutorialPage > 0) { e.preventDefault(); moveTutorial(-1); }
 });
 
+// ── 선생님 화면 (주소 끝에 ?teacher): 비밀번호를 넣고 턴마다 시나리오 상자를 열거나 잠금 ──
+// 비밀번호는 Vercel 환경 변수 TEACHER_PASSWORD에 두고 서버(api/gate.js)가 확인함. 이 탭을 닫을 때까지는 다시 묻지 않음
+const TEACHER_PW_KEY = 'gamenews-teacher-pw';
+let teacherPw = '';
+
+async function teacherRequest(payload) {
+    let resp;
+    try {
+        resp = await fetch(GATE.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...payload, password: teacherPw })
+        });
+    } catch (err) {
+        throw new Error('서버에 연결하지 못했어요. 인터넷 연결을 확인하고, 파일이 아닌 Vercel 주소로 열었는지 확인하세요.');
+    }
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+        const err = new Error(data.message || (resp.status === 404
+            ? '서버 기능(/api/gate)을 찾지 못했어요. Vercel에 배포된 주소로 열어 주세요.'
+            : `서버 오류가 났어요 (${resp.status}). 잠시 후 다시 시도하세요.`));
+        err.code = data.error;
+        throw err;
+    }
+    return data;
+}
+
+function teacherMessage(text) {
+    const el = document.getElementById('teacher_msg');
+    el.innerText = text || '';
+    el.hidden = !text;
+}
+
+function teacherBusy(on) {
+    document.querySelectorAll('#teacher-page button').forEach(btn => { btn.disabled = on; });
+}
+
+// 로그인 화면 ↔ 조작 화면
+function teacherShowPanel(on) {
+    document.getElementById('teacher_login').style.display = on ? 'none' : '';
+    document.getElementById('teacher_panel').style.display = on ? '' : 'none';
+    if (!on) document.getElementById('teacher_pw').focus();
+}
+
+function renderTeacher(open) {
+    document.getElementById('teacher_turns').innerHTML = [1, 2, 3, 4].map(t => {
+        const on = open[t] === true;
+        return `
+        <div class="gate-row${on ? ' open' : ''}">
+            <span class="chest-img" aria-hidden="true"></span>
+            <span class="gate-turn">${t}턴 ${VIEW[t].stage}<small>${VIEW[t].ages}</small></span>
+            <span class="gate-state">${on ? '열림' : '잠김'}</span>
+            ${on
+                ? `<button type="button" class="btn-lock" onclick="teacherSet(${t}, false)" aria-label="${t}턴 상자 잠그기">잠그기</button>`
+                : `<button type="button" class="btn-loan" onclick="teacherSet(${t}, true)" aria-label="${t}턴 상자 열기">열기</button>`}
+        </div>`;
+    }).join('');
+    const studentUrl = location.origin + location.pathname;
+    document.getElementById('teacher_foot').innerText =
+        `마지막 확인 ${new Date().toLocaleTimeString('ko-KR')} · 학생 화면은 ?teacher 없는 주소로 열어 주세요: ${studentUrl}`;
+}
+
+async function teacherConnect() {
+    teacherBusy(true);
+    try {
+        const data = await teacherRequest({});
+        try { sessionStorage.setItem(TEACHER_PW_KEY, teacherPw); } catch (err) { /* 저장 못 해도 이번 화면에서는 계속 사용 */ }
+        teacherMessage('');
+        renderTeacher(data.open);
+        teacherShowPanel(true);
+    } catch (err) {
+        if (err.code === 'password') {
+            teacherPw = '';
+            try { sessionStorage.removeItem(TEACHER_PW_KEY); } catch (e) { /* 무시 */ }
+            teacherShowPanel(false);
+        }
+        teacherMessage(err.message);
+    } finally {
+        teacherBusy(false);
+    }
+}
+
+function teacherLogin(event) {
+    event.preventDefault();
+    teacherPw = document.getElementById('teacher_pw').value.trim();
+    if (!teacherPw) return teacherMessage('비밀번호를 입력하세요.');
+    document.getElementById('teacher_pw').value = '';
+    teacherConnect();
+}
+
+// turn: 1~4 또는 'all' / open: true 열기, false 잠그기
+async function teacherSet(turn, open) {
+    if (turn === 'all' && !confirm('1~4턴 상자를 모두 잠글까요? 다음 반 수업 전에 누르세요.')) return;
+    teacherBusy(true);
+    try {
+        const data = await teacherRequest({ turn, open });
+        teacherMessage('');
+        renderTeacher(data.open);
+    } catch (err) {
+        teacherMessage(err.message);
+        if (err.code === 'password') { teacherPw = ''; teacherShowPanel(false); }
+    } finally {
+        teacherBusy(false);
+    }
+}
+
+function startTeacher() {
+    document.title = `선생님 화면 · ${document.title}`;
+    document.querySelector('.tab-group').style.display = 'none';
+    document.getElementById('game-page').style.display = 'none';
+    document.getElementById('teacher-page').style.display = '';
+    try { teacherPw = sessionStorage.getItem(TEACHER_PW_KEY) || ''; } catch (err) { teacherPw = ''; }
+    if (teacherPw) teacherConnect();
+    else teacherShowPanel(false);
+}
+
 document.getElementById('turn-pages').innerHTML = [1, 2, 3, 4].map(turnPageHtml).join('');
-initGame();
-openTutorial();
+if (TEACHER_MODE) {
+    startTeacher();
+} else {
+    initGame();
+    openTutorial();
+    fetchGate();  // 선생님 스위치를 쓰는지 미리 확인 (3단계에 들어서면 몇 초마다 다시 확인)
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) pollGate(); });
+}
 </script>
 </body>
 </html>
